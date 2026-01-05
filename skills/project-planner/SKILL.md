@@ -1,3 +1,8 @@
+---
+name: project-planner
+description: Generate a comprehensive PLAN.md file for a new project. Creates structured plans with tickets that an Orchestrator can execute.
+---
+
 # Project Planner Skill
 
 ## Purpose
