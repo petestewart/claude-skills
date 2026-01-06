@@ -38,6 +38,7 @@ A focused implementation agent that:
 - Automatically spawned by the Orchestrator via the Task tool
 - Should not be invoked directly by users
 
+<<<<<<< HEAD
 ### 4. Typora Markdown (`/typora-markdown`)
 
 Opens markdown content in Typora for enhanced viewing and editing. Useful for viewing plans, PR reviews, analysis reports, or any substantial markdown content.
@@ -50,6 +51,21 @@ Opens markdown content in Typora for enhanced viewing and editing. Useful for vi
 - When explicitly requested to view markdown in Typora
 
 **Note:** The skill will automatically skip if you say "don't open in Typora", "skip Typora", "no Typora", or "terminal only".
+=======
+### 4. QA (`/qa`)
+
+Quality assurance testing skill that:
+- Creates thorough test plans (QA_TEST.md)
+- Gets user approval before execution
+- Spawns agents to execute tests sequentially
+- Automatically fixes bugs found during testing
+- Generates detailed test reports (QA_REPORT.md)
+
+**When to use:**
+- When you say "run QA", "test the changes", "verify the implementation"
+- After completing implementation work that needs validation
+- When you want to systematically test new functionality
+>>>>>>> 3a4c9e45013521c2f17bb468b885682f4c31770f
 
 ## Installation
 
@@ -76,6 +92,7 @@ mkdir -p ~/.claude/skills
 cp -r skills/project-planner ~/.claude/skills/
 cp -r skills/orchestrator ~/.claude/skills/
 cp -r skills/subagent ~/.claude/skills/
+cp -r skills/qa ~/.claude/skills/
 cp -r skills/typora-markdown ~/.claude/skills/
 ```
 
@@ -175,6 +192,8 @@ claude-skills/
     │   ├── TEMPLATES.md
     │   ├── CHECKLIST.md
     │   └── INTEGRATION_GUIDE.md
+    │   └── qa/
+    │   └── SKILL.md       # Main skill definition
     └── typora-markdown/
         ├── SKILL.md       # Main skill definition
         └── scripts/
@@ -204,6 +223,7 @@ To remove the skills:
 rm -rf ~/.claude/skills/project-planner
 rm -rf ~/.claude/skills/orchestrator
 rm -rf ~/.claude/skills/subagent
+rm -rf ~/.claude/skills/qa
 rm -rf ~/.claude/skills/typora-markdown
 ```
 
