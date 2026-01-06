@@ -38,6 +38,20 @@ A focused implementation agent that:
 - Automatically spawned by the Orchestrator via the Task tool
 - Should not be invoked directly by users
 
+### 4. QA (`/qa`)
+
+Quality assurance testing skill that:
+- Creates thorough test plans (QA_TEST.md)
+- Gets user approval before execution
+- Spawns agents to execute tests sequentially
+- Automatically fixes bugs found during testing
+- Generates detailed test reports (QA_REPORT.md)
+
+**When to use:**
+- When you say "run QA", "test the changes", "verify the implementation"
+- After completing implementation work that needs validation
+- When you want to systematically test new functionality
+
 ## Installation
 
 ### Quick Install (Recommended)
@@ -63,6 +77,7 @@ mkdir -p ~/.claude/skills
 cp -r skills/project-planner ~/.claude/skills/
 cp -r skills/orchestrator ~/.claude/skills/
 cp -r skills/subagent ~/.claude/skills/
+cp -r skills/qa ~/.claude/skills/
 ```
 
 ### Verify Installation
@@ -153,12 +168,14 @@ claude-skills/
     │   ├── subagent-SKILL.md
     │   ├── subagent-CHECKLIST.md
     │   └── subagent-TEMPLATES.md
-    └── subagent/
-        ├── SKILL.md       # Main skill definition
-        ├── PLAN_TEMPLATE.md
-        ├── TEMPLATES.md
-        ├── CHECKLIST.md
-        └── INTEGRATION_GUIDE.md
+    ├── subagent/
+    │   ├── SKILL.md       # Main skill definition
+    │   ├── PLAN_TEMPLATE.md
+    │   ├── TEMPLATES.md
+    │   ├── CHECKLIST.md
+    │   └── INTEGRATION_GUIDE.md
+    └── qa/
+        └── SKILL.md       # Main skill definition
 ```
 
 ## Requirements
@@ -184,6 +201,7 @@ To remove the skills:
 rm -rf ~/.claude/skills/project-planner
 rm -rf ~/.claude/skills/orchestrator
 rm -rf ~/.claude/skills/subagent
+rm -rf ~/.claude/skills/qa
 ```
 
 ## Contributing
