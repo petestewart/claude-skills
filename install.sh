@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Claude Skills Installation Script
-# Installs project-planner, orchestrator, and subagent skills
+# Installs project-planner, orchestrator, subagent, and typora-markdown skills
 
 set -e
 
@@ -33,7 +33,7 @@ if [ ! -d "$SKILLS_DEST" ]; then
 fi
 
 # Skills to install
-SKILLS=("project-planner" "orchestrator" "subagent")
+SKILLS=("project-planner" "orchestrator" "subagent" "typora-markdown")
 
 # Install each skill
 for skill in "${SKILLS[@]}"; do
@@ -71,3 +71,4 @@ echo ""
 echo "Usage:"
 echo "  /project-planner  - Create a PLAN.md for a new project"
 echo "  /orchestrator     - Execute the plan with subagent coordination"
+echo "  /typora-markdown  - Open markdown content in Typora for viewing"

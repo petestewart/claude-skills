@@ -1,6 +1,6 @@
-# Claude Code Skills: Project Planning & Orchestration
+# Claude Code Skills
 
-A collection of custom skills for Claude Code that enable structured project planning and coordinated task execution.
+A collection of custom skills for Claude Code, including project planning and orchestration tools, as well as utilities for enhanced markdown viewing and editing.
 
 ## Skills Included
 
@@ -38,6 +38,19 @@ A focused implementation agent that:
 - Automatically spawned by the Orchestrator via the Task tool
 - Should not be invoked directly by users
 
+### 4. Typora Markdown (`/typora-markdown`)
+
+Opens markdown content in Typora for enhanced viewing and editing. Useful for viewing plans, PR reviews, analysis reports, or any substantial markdown content.
+
+**When to use:**
+- When creating plan files
+- After generating PR reviews
+- For codebase analysis reports
+- When generating documentation
+- When explicitly requested to view markdown in Typora
+
+**Note:** The skill will automatically skip if you say "don't open in Typora", "skip Typora", "no Typora", or "terminal only".
+
 ## Installation
 
 ### Quick Install (Recommended)
@@ -63,6 +76,7 @@ mkdir -p ~/.claude/skills
 cp -r skills/project-planner ~/.claude/skills/
 cp -r skills/orchestrator ~/.claude/skills/
 cp -r skills/subagent ~/.claude/skills/
+cp -r skills/typora-markdown ~/.claude/skills/
 ```
 
 ### Verify Installation
@@ -72,6 +86,8 @@ After installation, restart Claude Code and verify the skills are loaded:
 ```
 /project-planner
 /orchestrator
+/subagent
+/typora-markdown
 ```
 
 You should see the skills listed in your available commands.
@@ -153,12 +169,16 @@ claude-skills/
     │   ├── subagent-SKILL.md
     │   ├── subagent-CHECKLIST.md
     │   └── subagent-TEMPLATES.md
-    └── subagent/
+    ├── subagent/
+    │   ├── SKILL.md       # Main skill definition
+    │   ├── PLAN_TEMPLATE.md
+    │   ├── TEMPLATES.md
+    │   ├── CHECKLIST.md
+    │   └── INTEGRATION_GUIDE.md
+    └── typora-markdown/
         ├── SKILL.md       # Main skill definition
-        ├── PLAN_TEMPLATE.md
-        ├── TEMPLATES.md
-        ├── CHECKLIST.md
-        └── INTEGRATION_GUIDE.md
+        └── scripts/
+            └── open-in-typora.sh
 ```
 
 ## Requirements
@@ -184,6 +204,7 @@ To remove the skills:
 rm -rf ~/.claude/skills/project-planner
 rm -rf ~/.claude/skills/orchestrator
 rm -rf ~/.claude/skills/subagent
+rm -rf ~/.claude/skills/typora-markdown
 ```
 
 ## Contributing
