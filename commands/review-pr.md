@@ -10,7 +10,8 @@ Analyze GitHub pull request $1 and provide:
 
 1. A high-level explanation of what the PR does
 2. The main changes and their purpose
-3. A suggested order to review the files to understand the flow
+3. Mermaid diagrams showing architecture and relationships
+4. A suggested order to review the files to understand the flow
 
 ## Instructions
 
@@ -19,19 +20,85 @@ Analyze GitHub pull request $1 and provide:
 3. Use `git log origin/main..pr-$1` to see commits
 4. Use `git diff --name-only origin/main...pr-$1` to list changed files
 5. Examine key files to understand the flow (API specs, controllers, components)
-6. Provide a concise summary organized as:
+6. Generate Mermaid diagrams to visualize the changes (see Diagrams section below)
+7. Provide a concise summary organized as:
    - **High-level explanation**: What does this PR accomplish?
    - **Key changes**: What are the main modifications?
+   - **Architecture diagrams**: Visual representation of relationships
    - **Suggested review order**: Group files logically (e.g., shared/API contracts → backend → frontend)
+
+## Diagrams
+
+Include Mermaid diagrams when they add clarity. Choose diagram types based on the nature of the changes:
+
+**When to include diagrams:**
+- New features with multiple components interacting
+- Changes to data flow or API contracts
+- Refactoring that affects module relationships
+- Changes spanning multiple layers (frontend/backend/database)
+
+**Skip diagrams for:**
+- Single-file changes or simple bug fixes
+- Documentation-only changes
+- Trivial modifications where a diagram adds no value
+
+**Diagram types to consider:**
+
+| Change Type | Recommended Diagram |
+|-------------|---------------------|
+| API/data flow | `flowchart LR` or `sequenceDiagram` |
+| Class/module relationships | `classDiagram` |
+| State changes | `stateDiagram-v2` |
+| Component hierarchy | `flowchart TD` |
+| Database schema changes | `erDiagram` |
+
+**Example diagrams:**
+
+Data flow through new API endpoint:
+```mermaid
+flowchart LR
+    Client --> Controller
+    Controller --> Service
+    Service --> Repository
+    Repository --> Database
+```
+
+Component relationships:
+```mermaid
+classDiagram
+    UserService --> UserRepository
+    UserService --> AuthService
+    UserController --> UserService
+```
+
+Request/response sequence:
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant A as API
+    participant D as Database
+    C->>A: POST /users
+    A->>D: INSERT user
+    D-->>A: user record
+    A-->>C: 201 Created
+```
 
 ## Output Format
 
-Present the review order with numbered sections and file paths, grouping related files together. Include brief annotations explaining what each file/group does.
+Present the analysis with diagrams followed by the review order. Group files logically with brief annotations.
 
 Example structure:
 ```
 ## High-Level Explanation
 Brief description of PR purpose
+
+## Architecture Overview
+
+[Mermaid diagram showing how components interact]
+
+## Key Changes
+- Change 1
+- Change 2
 
 ## Suggested File Review Order
 
@@ -47,4 +114,4 @@ Brief description of PR purpose
 5. path/to/component.tsx - What it does
 ```
 
-Focus on creating a logical learning path through the changes, not just listing files alphabetically.
+Focus on creating a logical learning path through the changes, not just listing files alphabetically. Use diagrams to show the "big picture" before diving into file details.
