@@ -86,7 +86,10 @@ Repeat until the project is complete:
    - Dependencies: [what must be done before this]
    - Estimated complexity: [simple|moderate|complex]
    ```
-4. Save PLAN.md
+4. **Select the model** based on estimated complexity:
+   - `simple` or `moderate` → use `model="haiku"`
+   - `complex` → use `model="opus"`
+5. Save PLAN.md
 
 ### Step 4: Spawn the Subagent Using the Task Tool
 
@@ -97,6 +100,7 @@ Repeat until the project is complete:
 ```
 Task(
   subagent_type="general-purpose",
+  model="haiku",  // or "opus" for complex tasks
   description="Execute ticket T###",
   prompt="<filled-in subagent prompt template below>"
 )
@@ -113,6 +117,7 @@ The subagent prompt must include:
 ```
 Task(
   subagent_type="general-purpose",
+  model="haiku",
   description="Execute ticket T002",
   prompt="""You are a focused subagent working on a single ticket for this project.
 
@@ -152,6 +157,15 @@ The subagent works until:
 - They are blocked → report "BLOCKED: [reason]"
 
 **After spawning:** Wait for the Task to complete, then read its output to evaluate the result.
+
+**Model Selection Guide:**
+
+| Task Characteristics | Model | Examples |
+|---------------------|-------|----------|
+| Simple/Moderate | `haiku` | Config changes, simple implementations, adding tests, documentation |
+| Complex | `opus` | Architecture decisions, complex algorithms, debugging subtle issues, multi-system integrations |
+
+Default to `haiku` unless the task genuinely requires sophisticated reasoning.
 
 ### Step 5: Evaluate the Result
 When the subagent reports status:
