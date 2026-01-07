@@ -1,6 +1,6 @@
 # Claude Code Skills
 
-A collection of custom skills for Claude Code, including project planning and orchestration tools, as well as utilities for enhanced markdown viewing and editing.
+A collection of custom skills and commands for Claude Code, including project planning, orchestration tools, QA testing, and PR workflow utilities.
 
 ## Skills Included
 
@@ -38,8 +38,21 @@ A focused implementation agent that:
 - Automatically spawned by the Orchestrator via the Task tool
 - Should not be invoked directly by users
 
-<<<<<<< HEAD
-### 4. Typora Markdown (`/typora-markdown`)
+### 4. QA (`/qa`)
+
+Quality assurance testing skill that:
+- Creates thorough test plans (QA_TEST.md)
+- Gets user approval before execution
+- Executes tests using available tools (including browser automation)
+- Automatically fixes bugs found during testing
+- Generates detailed test reports (QA_REPORT.md)
+
+**When to use:**
+- When you say "run QA", "test the changes", "verify the implementation"
+- After completing implementation work that needs validation
+- When you want to systematically test new functionality
+
+### 5. Typora Markdown (`/typora-markdown`)
 
 Opens markdown content in Typora for enhanced viewing and editing. Useful for viewing plans, PR reviews, analysis reports, or any substantial markdown content.
 
@@ -51,21 +64,30 @@ Opens markdown content in Typora for enhanced viewing and editing. Useful for vi
 - When explicitly requested to view markdown in Typora
 
 **Note:** The skill will automatically skip if you say "don't open in Typora", "skip Typora", "no Typora", or "terminal only".
-=======
-### 4. QA (`/qa`)
 
-Quality assurance testing skill that:
-- Creates thorough test plans (QA_TEST.md)
-- Gets user approval before execution
-- Spawns agents to execute tests sequentially
-- Automatically fixes bugs found during testing
-- Generates detailed test reports (QA_REPORT.md)
+## Commands Included
 
-**When to use:**
-- When you say "run QA", "test the changes", "verify the implementation"
-- After completing implementation work that needs validation
-- When you want to systematically test new functionality
->>>>>>> 3a4c9e45013521c2f17bb468b885682f4c31770f
+### `/review-pr <pr-number>`
+
+Analyzes a GitHub pull request and provides:
+- A high-level explanation of what the PR does
+- The main changes and their purpose
+- A suggested order to review the files to understand the flow
+
+### `/pr-description`
+
+Generates a GitHub pull request description by:
+- Extracting the Jira ticket number from the current git branch
+- Fetching Jira ticket details (if available)
+- Analyzing git changes
+- Creating a formatted PR description with Description, References, QA steps, and Jira links
+
+### `/analyze-pr-feedback <pr-number>`
+
+Gathers and analyzes all reviews and comments for a GitHub PR. For each comment:
+- Explains what the comment is requesting
+- Assesses whether the comment is valid/actionable
+- Proposes solutions or next steps
 
 ## Installation
 
@@ -73,7 +95,7 @@ Quality assurance testing skill that:
 
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/claude-skills.git
+git clone https://github.com/petestewart/claude-skills.git
 
 # Run the install script
 cd claude-skills
@@ -82,11 +104,12 @@ cd claude-skills
 
 ### Manual Install
 
-Copy the skills to your Claude Code skills directory:
+Copy the skills and commands to your Claude Code directories:
 
 ```bash
-# Create the skills directory if it doesn't exist
+# Create the directories if they don't exist
 mkdir -p ~/.claude/skills
+mkdir -p ~/.claude/commands
 
 # Copy each skill
 cp -r skills/project-planner ~/.claude/skills/
@@ -94,20 +117,28 @@ cp -r skills/orchestrator ~/.claude/skills/
 cp -r skills/subagent ~/.claude/skills/
 cp -r skills/qa ~/.claude/skills/
 cp -r skills/typora-markdown ~/.claude/skills/
+
+# Copy each command
+cp commands/review-pr.md ~/.claude/commands/
+cp commands/pr-description.md ~/.claude/commands/
+cp commands/analyze-pr-feedback.md ~/.claude/commands/
 ```
 
 ### Verify Installation
 
-After installation, restart Claude Code and verify the skills are loaded:
+After installation, restart Claude Code and verify the skills and commands are loaded:
 
 ```
 /project-planner
 /orchestrator
-/subagent
+/qa
 /typora-markdown
+/review-pr
+/pr-description
+/analyze-pr-feedback
 ```
 
-You should see the skills listed in your available commands.
+You should see these listed in your available commands.
 
 ## Usage
 
@@ -134,6 +165,20 @@ You should see the skills listed in your available commands.
    - Spawn subagents to implement tickets
    - Verify completed work
    - Update the plan as work progresses
+
+### Running QA Tests
+
+1. Complete implementation work that needs testing
+2. Invoke the QA skill:
+   ```
+   /qa
+   ```
+3. The skill will:
+   - Analyze what needs to be tested
+   - Create a `QA_TEST.md` test plan
+   - Request your approval
+   - Execute the tests
+   - Generate a `QA_REPORT.md` with results
 
 ### Workflow Overview
 
@@ -163,6 +208,12 @@ Orchestrator verifies and marks Done
       |
       v
 Repeat until project complete
+      |
+      v
+User: "Run QA" or "/qa"
+      |
+      v
+QA creates test plan, executes, reports
 ```
 
 ## File Structure
@@ -171,6 +222,10 @@ Repeat until project complete
 claude-skills/
 ├── README.md              # This file
 ├── install.sh             # Installation script
+├── commands/
+│   ├── analyze-pr-feedback.md
+│   ├── pr-description.md
+│   └── review-pr.md
 └── skills/
     ├── project-planner/
     │   ├── SKILL.md       # Main skill definition
@@ -192,7 +247,7 @@ claude-skills/
     │   ├── TEMPLATES.md
     │   ├── CHECKLIST.md
     │   └── INTEGRATION_GUIDE.md
-    │   └── qa/
+    ├── qa/
     │   └── SKILL.md       # Main skill definition
     └── typora-markdown/
         ├── SKILL.md       # Main skill definition
@@ -204,6 +259,9 @@ claude-skills/
 
 - Claude Code CLI (version 2.0.20 or later)
 - Skills support enabled (default in recent versions)
+- For PR commands: GitHub CLI (`gh`) installed and authenticated
+- For `/pr-description`: Jira MCP configured (optional, will work without it)
+- For `/typora-markdown`: Typora installed
 
 ## Updating
 
@@ -217,14 +275,20 @@ git pull
 
 ## Uninstalling
 
-To remove the skills:
+To remove the skills and commands:
 
 ```bash
+# Remove skills
 rm -rf ~/.claude/skills/project-planner
 rm -rf ~/.claude/skills/orchestrator
 rm -rf ~/.claude/skills/subagent
 rm -rf ~/.claude/skills/qa
 rm -rf ~/.claude/skills/typora-markdown
+
+# Remove commands
+rm -f ~/.claude/commands/review-pr.md
+rm -f ~/.claude/commands/pr-description.md
+rm -f ~/.claude/commands/analyze-pr-feedback.md
 ```
 
 ## Contributing
