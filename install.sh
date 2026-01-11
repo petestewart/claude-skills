@@ -57,7 +57,7 @@ for skill in "${SKILLS[@]}"; do
 done
 
 # Commands to install
-COMMANDS=("analyze-pr-feedback.md" "pr-description.md" "review-pr.md")
+COMMANDS=("analyze-pr-feedback.md" "planterview.md" "pr-description.md" "review-pr.md")
 
 # Create commands destination directory if it doesn't exist
 if [ ! -d "$COMMANDS_DEST" ]; then
@@ -106,6 +106,7 @@ echo "  /project-planner      - Create a PLAN.md for a new project"
 echo "  /orchestrator         - Execute the plan with subagent coordination"
 echo "  /qa                   - Create and execute QA test plans"
 echo "  /typora-markdown      - Open markdown content in Typora for viewing"
+echo "  /planterview [file]   - Interview to refine a spec (default: SPEC.md)"
 echo "  /review-pr <number>   - Analyze a PR with suggested review order"
 echo "  /pr-description       - Generate a PR description from branch/Jira"
 echo "  /analyze-pr-feedback  - Analyze PR reviews and comments"
