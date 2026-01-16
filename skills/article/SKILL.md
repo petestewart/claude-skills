@@ -13,6 +13,7 @@ This skill creates self-contained, educational HTML articles with inline SVG dia
 ```
 /article <subject>
 /article <subject> --oneshot
+/article --all
 ```
 
 The subject can be:
@@ -22,6 +23,7 @@ The subject can be:
 
 **Flags:**
 - `--oneshot` - Skip clarifying questions and generate the article immediately using defaults
+- `--all` - Generate all articles from the queue (implies `--oneshot` behavior for each)
 
 ## Input Processing
 
@@ -37,14 +39,31 @@ The subject can be:
 - **From file**: Read the file, identify the main subject and concepts to explain
 - **From plain text**: Use the text directly as the topic
 
-### Step 3: Check for --oneshot Flag
+### Step 3: Check for --all Flag (Batch Mode)
 
-If `--oneshot` is present in the input, skip to the Output Requirements section and generate immediately with these defaults:
+If `--all` is present, enter batch mode:
+
+1. **Read the queue file** at `.claude/article-queue.md`
+2. **Extract unchecked topics** - items matching `- [ ] <topic>`
+3. **If queue is empty**, report "No articles in queue" and exit
+4. **For each topic**:
+   - Generate the article using `--oneshot` defaults (no clarifying questions)
+   - Save to `./article-<slugified-topic>.html`
+   - Mark the topic as complete in the queue file: `- [x] <topic>`
+   - Track the generated file path
+5. **After all articles are generated**:
+   - If 5 or fewer articles were created, open them all automatically
+   - If more than 5 were created, list the file paths without opening (to avoid browser tab overload)
+6. **Report completion** with count and file paths
+
+### Step 4: Check for --oneshot Flag
+
+If `--oneshot` is present in the input (but not `--all`), skip to the Output Requirements section and generate immediately with these defaults:
 - Audience: "developers who are smart but new to the topic"
 - Depth: comprehensive
 - Focus: balanced coverage of all aspects
 
-### Step 4: Ask Clarifying Questions (unless --oneshot)
+### Step 5: Ask Clarifying Questions (unless --oneshot or --all)
 
 Use the **AskUserQuestion** tool to gather preferences before writing. Ask these questions in a single call:
 
@@ -343,17 +362,35 @@ Claude: [Fetches the React documentation page]
         [Skips questions due to --oneshot]
         [Creates article with default settings]
         [Saves and opens ./article-thinking-in-react.html]
+
+User: /article --all
+Claude: [Reads .claude/article-queue.md]
+        [Finds 3 unchecked topics]
+        [Generates article 1/3: "TCP congestion control"]
+        [Generates article 2/3: "WebSocket vs SSE"]
+        [Generates article 3/3: "Unix file permissions"]
+        [Marks all 3 as complete in queue]
+        [Opens all 3 articles (fewer than 5)]
+        Generated 3 articles and opened them in your browser.
 ```
 
 ## Execution Workflow
 
-1. **Parse input** to determine type (URL, file, or plain text) and check for `--oneshot` flag
+### Standard Mode (single article)
+1. **Parse input** to determine type (URL, file, or plain text) and check for flags
 2. **Gather source material** using appropriate tool (WebFetch, Read, or knowledge)
 3. **Ask clarifying questions** using AskUserQuestion (skip if `--oneshot`)
 4. **Generate the HTML article** following all requirements above, tailored to user preferences
 5. **Save the file** to the current directory with a descriptive filename
 6. **Open the article** automatically using Bash: `open <filepath>` (macOS) or `xdg-open <filepath>` (Linux)
 7. **Report completion** briefly confirming the article was generated and opened
+
+### Batch Mode (`--all` flag)
+1. **Read queue** from `.claude/article-queue.md`
+2. **Extract unchecked topics** matching `- [ ] <topic>`
+3. **For each topic**: generate article with defaults, save file, mark complete in queue
+4. **Open articles** if 5 or fewer were generated; otherwise just list file paths
+5. **Report completion** with count and paths
 
 ## Quick Reference
 
@@ -366,12 +403,14 @@ Claude: [Fetches the React documentation page]
 **Trigger Phrases:**
 - `/article <subject>`
 - `/article <subject> --oneshot`
+- `/article --all`
 - "write an article about..."
 - "create an article on..."
 - "explain this topic as an article..."
 
 **Flags:**
 - `--oneshot` - Skip clarifying questions, use defaults
+- `--all` - Generate all queued articles (opens if ≤5, lists paths if >5)
 
 **Output:** Single HTML file with Google Fonts, viewable in any browser.
 
