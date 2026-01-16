@@ -1,0 +1,1405 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RBAC, ABAC, PBAC, and ReBAC: A Developer's Guide to Access Control Models</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Outfit:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ink: #1a1a1a;
+            --ink-light: #4a4a4a;
+            --ink-muted: #767676;
+            --paper: #fdfcfa;
+            --paper-warm: #f7f5f0;
+            --accent: #c45d3a;
+            --accent-light: #fef6f3;
+            --teal: #2d6a6a;
+            --teal-light: #e8f4f4;
+            --gold: #9a7b4f;
+            --gold-light: #faf6ef;
+            --border: #e5e2dc;
+            --code-bg: #f4f2ed;
+        }
+
+        [data-theme="dark"] {
+            --ink: #e8e6e1;
+            --ink-light: #b8b5ad;
+            --ink-muted: #8a877f;
+            --paper: #141413;
+            --paper-warm: #1c1b19;
+            --accent: #e07a58;
+            --accent-light: #2a1f1a;
+            --teal: #5aa3a3;
+            --teal-light: #1a2626;
+            --gold: #c9a66b;
+            --gold-light: #1f1c16;
+            --border: #2e2d2a;
+            --code-bg: #1e1d1b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            font-size: 18px;
+            line-height: 1.7;
+            color: var(--ink);
+            background-color: var(--paper);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 3rem 0;
+        }
+
+        header {
+            background: var(--paper-warm);
+            border-bottom: 1px solid var(--border);
+            padding: 2rem 0;
+            position: relative;
+        }
+
+        .header-content {
+            width: 90%;
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .theme-toggle {
+            background: var(--paper);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.9rem;
+            color: var(--ink);
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+            margin-left: 2rem;
+        }
+
+        .theme-toggle:hover {
+            background: var(--accent-light);
+            border-color: var(--accent);
+        }
+
+        [data-theme="light"] .dark-icon { display: none; }
+        [data-theme="dark"] .light-icon { display: none; }
+
+        h1 {
+            font-family: 'Fraunces', serif;
+            font-size: clamp(2rem, 5vw, 3rem);
+            font-weight: 700;
+            line-height: 1.2;
+            color: var(--ink);
+            letter-spacing: -0.02em;
+        }
+
+        h2 {
+            font-family: 'Fraunces', serif;
+            font-size: clamp(1.5rem, 3vw, 2rem);
+            font-weight: 600;
+            color: var(--ink);
+            margin: 3rem 0 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--border);
+        }
+
+        h3 {
+            font-family: 'Fraunces', serif;
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--ink);
+            margin: 2rem 0 1rem;
+        }
+
+        h4 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--ink-light);
+            margin: 1.5rem 0 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        p {
+            margin-bottom: 1.25rem;
+        }
+
+        a {
+            color: var(--teal);
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+            transition: border-color 0.2s ease;
+        }
+
+        a:hover {
+            border-bottom-color: var(--teal);
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: var(--ink-light);
+            margin-top: 1rem;
+            font-weight: 400;
+        }
+
+        .hook {
+            background: linear-gradient(135deg, var(--accent-light), var(--gold-light));
+            border-left: 4px solid var(--accent);
+            padding: 1.5rem 2rem;
+            margin: 2rem 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .hook p {
+            margin: 0;
+            font-size: 1.1rem;
+        }
+
+        .learning-outcomes {
+            background: var(--teal-light);
+            border: 1px solid var(--teal);
+            border-radius: 8px;
+            padding: 1.5rem 2rem;
+            margin: 2rem 0;
+        }
+
+        .learning-outcomes h4 {
+            color: var(--teal);
+            margin-top: 0;
+            text-transform: none;
+            letter-spacing: normal;
+            font-family: 'Fraunces', serif;
+            font-size: 1.2rem;
+        }
+
+        .learning-outcomes ul {
+            margin: 0;
+            padding-left: 1.5rem;
+        }
+
+        .learning-outcomes li {
+            margin-bottom: 0.5rem;
+            color: var(--ink);
+        }
+
+        /* Collapsible TOC */
+        .toc {
+            background: var(--paper-warm);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin: 2rem 0;
+        }
+
+        .toc summary {
+            font-family: 'Fraunces', serif;
+            font-weight: 600;
+            font-size: 1.1rem;
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            list-style: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .toc summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .toc summary::before {
+            content: '▶';
+            font-size: 0.8rem;
+            transition: transform 0.2s ease;
+        }
+
+        .toc[open] summary::before {
+            transform: rotate(90deg);
+        }
+
+        .toc-content {
+            padding: 0 1.5rem 1.5rem;
+        }
+
+        .toc ol {
+            margin: 0;
+            padding-left: 1.5rem;
+        }
+
+        .toc li {
+            margin-bottom: 0.5rem;
+        }
+
+        /* Quick summary box */
+        .quick-summary {
+            background: var(--gold-light);
+            border: 1px solid var(--gold);
+            border-radius: 8px;
+            padding: 1.5rem 2rem;
+            margin: 2rem 0;
+        }
+
+        .quick-summary h3 {
+            color: var(--gold);
+            margin-top: 0;
+            font-size: 1.2rem;
+        }
+
+        /* Code blocks */
+        pre {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.25rem 1.5rem;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+        }
+
+        code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+        }
+
+        p code, li code {
+            background: var(--code-bg);
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.85em;
+        }
+
+        /* Diagrams */
+        .diagram {
+            background: var(--paper-warm);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            overflow-x: auto;
+        }
+
+        .diagram svg {
+            display: block;
+            margin: 0 auto;
+            max-width: 100%;
+            height: auto;
+            max-height: 350px;
+        }
+
+        .diagram-caption {
+            text-align: center;
+            font-size: 0.95rem;
+            color: var(--ink-muted);
+            margin-top: 1rem;
+            font-style: italic;
+        }
+
+        /* Comparison tables */
+        .table-wrapper {
+            overflow-x: auto;
+            margin: 2rem 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+        }
+
+        th {
+            background: var(--paper-warm);
+            font-family: 'Fraunces', serif;
+            font-weight: 600;
+            text-align: left;
+            padding: 1rem;
+            border-bottom: 2px solid var(--border);
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            vertical-align: top;
+        }
+
+        tr:hover {
+            background: var(--paper-warm);
+        }
+
+        /* Callout boxes */
+        .callout {
+            border-radius: 8px;
+            padding: 1.25rem 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .callout-note {
+            background: var(--teal-light);
+            border-left: 4px solid var(--teal);
+        }
+
+        .callout-warning {
+            background: var(--accent-light);
+            border-left: 4px solid var(--accent);
+        }
+
+        .callout-tip {
+            background: var(--gold-light);
+            border-left: 4px solid var(--gold);
+        }
+
+        .callout-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .callout p:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Stop and check sections */
+        .stop-check {
+            background: var(--paper-warm);
+            border: 2px dashed var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .stop-check summary {
+            font-weight: 600;
+            cursor: pointer;
+            color: var(--accent);
+        }
+
+        .stop-check .answer {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+        }
+
+        /* Quiz section */
+        .quiz-question {
+            background: var(--paper-warm);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .quiz-question summary {
+            cursor: pointer;
+            font-weight: 500;
+            color: var(--teal);
+        }
+
+        .quiz-question .answer {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+        }
+
+        /* Lists */
+        ul, ol {
+            margin: 1rem 0 1.5rem;
+            padding-left: 2rem;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        /* Rule of thumb */
+        .rule-of-thumb {
+            background: linear-gradient(90deg, var(--gold-light), transparent);
+            border-left: 4px solid var(--gold);
+            padding: 1rem 1.5rem;
+            margin: 1.5rem 0;
+            font-style: italic;
+        }
+
+        .rule-of-thumb strong {
+            font-style: normal;
+            color: var(--gold);
+        }
+
+        /* Model cards */
+        .model-card {
+            background: var(--paper-warm);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+
+        .model-card h3 {
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .model-badge {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 100px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .badge-rbac { background: var(--teal-light); color: var(--teal); }
+        .badge-abac { background: var(--accent-light); color: var(--accent); }
+        .badge-pbac { background: var(--gold-light); color: var(--gold); }
+        .badge-rebac { background: #e8e4f4; color: #5a4a8a; }
+
+        [data-theme="dark"] .badge-rebac { background: #2a2640; color: #a99ad4; }
+
+        /* Decision tree */
+        .decision-tree {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            background: var(--code-bg);
+            padding: 1.5rem;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+
+        /* Footer */
+        footer {
+            margin-top: 4rem;
+            padding: 2rem 0;
+            border-top: 1px solid var(--border);
+            text-align: center;
+            color: var(--ink-muted);
+            font-size: 0.9rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                width: 92%;
+                padding: 2rem 0;
+            }
+
+            body {
+                font-size: 16px;
+            }
+
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .theme-toggle {
+                margin-left: 0;
+            }
+
+            table {
+                font-size: 0.85rem;
+            }
+
+            th, td {
+                padding: 0.75rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div>
+                <h1>RBAC, ABAC, PBAC, and ReBAC</h1>
+                <p class="subtitle">A Developer's Guide to Access Control Models</p>
+            </div>
+            <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+                <span class="light-icon">☀️ Light</span>
+                <span class="dark-icon">🌙 Dark</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="hook">
+            <p><strong>Every application needs to answer one question:</strong> "Can this user do this thing?" How you answer that question—your access control model—shapes your entire authorization architecture. Choose wrong, and you'll spend months refactoring. Choose wisely, and your permissions scale gracefully from 10 users to 10 million.</p>
+        </section>
+
+        <section class="learning-outcomes">
+            <h4>By the end of this article, you will be able to...</h4>
+            <ul>
+                <li>Explain the core mechanism of each access control model (RBAC, ABAC, PBAC, ReBAC)</li>
+                <li>Identify which model fits different authorization scenarios</li>
+                <li>Implement basic permission checks using each approach</li>
+                <li>Recognize when to combine models for complex requirements</li>
+                <li>Avoid common pitfalls that lead to security holes or maintenance nightmares</li>
+            </ul>
+        </section>
+
+        <details class="toc">
+            <summary>Table of Contents</summary>
+            <div class="toc-content">
+                <ol>
+                    <li><a href="#sixty-second">The 60-Second Version</a></li>
+                    <li><a href="#vocabulary">Key Concepts and Vocabulary</a></li>
+                    <li><a href="#rbac">RBAC: Role-Based Access Control</a></li>
+                    <li><a href="#abac">ABAC: Attribute-Based Access Control</a></li>
+                    <li><a href="#pbac">PBAC: Policy-Based Access Control</a></li>
+                    <li><a href="#rebac">ReBAC: Relationship-Based Access Control</a></li>
+                    <li><a href="#comparison">Comparing the Models</a></li>
+                    <li><a href="#examples">Worked Examples</a></li>
+                    <li><a href="#mistakes">Common Mistakes</a></li>
+                    <li><a href="#decision">How to Choose</a></li>
+                    <li><a href="#quiz">Quick Quiz</a></li>
+                    <li><a href="#summary">Summary and Next Steps</a></li>
+                </ol>
+            </div>
+        </details>
+
+        <section id="sixty-second" class="quick-summary">
+            <h3>⏱️ The 60-Second Version</h3>
+            <p><strong>RBAC</strong> groups users into roles (admin, editor, viewer). Simple but rigid—works when your permissions map cleanly to job functions.</p>
+            <p><strong>ABAC</strong> makes decisions based on attributes of users, resources, and context (user.department == resource.department AND time.hour &lt; 17). Flexible but complex.</p>
+            <p><strong>PBAC</strong> defines permissions as policies in a dedicated language or engine. Centralizes authorization logic and makes it auditable.</p>
+            <p><strong>ReBAC</strong> derives permissions from relationships (user owns document, user is member of team that owns project). Natural for collaborative apps where "who can access what" depends on object graphs.</p>
+        </section>
+
+        <section id="vocabulary">
+            <h2>Key Concepts and Vocabulary</h2>
+
+            <p>Before diving in, let's establish shared terminology:</p>
+
+            <dl>
+                <dt><strong>Subject</strong></dt>
+                <dd>The entity requesting access—usually a user, but could be a service account, API key, or process.</dd>
+
+                <dt><strong>Resource</strong></dt>
+                <dd>The thing being accessed—a document, API endpoint, database record, or feature.</dd>
+
+                <dt><strong>Action</strong></dt>
+                <dd>What the subject wants to do—read, write, delete, approve, share.</dd>
+
+                <dt><strong>Permission</strong></dt>
+                <dd>A statement that allows (or denies) a subject to perform an action on a resource.</dd>
+
+                <dt><strong>Policy</strong></dt>
+                <dd>A rule or set of rules that determine whether to grant access.</dd>
+
+                <dt><strong>Principal</strong></dt>
+                <dd>Another term for subject, commonly used in AWS and security contexts.</dd>
+            </dl>
+
+            <div class="diagram" aria-label="Basic access control flow diagram">
+                <svg viewBox="0 0 700 180" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                            <polygon points="0 0, 10 3.5, 0 7" fill="#4a4a4a"/>
+                        </marker>
+                    </defs>
+
+                    <!-- Subject -->
+                    <rect x="30" y="60" width="120" height="60" rx="8" fill="#e8f4f4" stroke="#2d6a6a" stroke-width="2"/>
+                    <text x="90" y="95" text-anchor="middle" font-family="Outfit, sans-serif" font-size="14" font-weight="600" fill="#2d6a6a">Subject</text>
+                    <text x="90" y="112" text-anchor="middle" font-family="Outfit, sans-serif" font-size="11" fill="#4a4a4a">(User, Service)</text>
+
+                    <!-- Arrow 1 -->
+                    <line x1="150" y1="90" x2="210" y2="90" stroke="#4a4a4a" stroke-width="2" marker-end="url(#arrowhead)"/>
+                    <text x="180" y="80" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" fill="#767676">request</text>
+
+                    <!-- Policy Decision Point -->
+                    <rect x="220" y="40" width="160" height="100" rx="8" fill="#fef6f3" stroke="#c45d3a" stroke-width="2"/>
+                    <text x="300" y="75" text-anchor="middle" font-family="Outfit, sans-serif" font-size="14" font-weight="600" fill="#c45d3a">Policy Decision</text>
+                    <text x="300" y="95" text-anchor="middle" font-family="Outfit, sans-serif" font-size="14" font-weight="600" fill="#c45d3a">Point</text>
+                    <text x="300" y="120" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" fill="#4a4a4a">evaluate(subject,</text>
+                    <text x="300" y="132" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" fill="#4a4a4a">action, resource)</text>
+
+                    <!-- Arrow 2 -->
+                    <line x1="380" y1="90" x2="440" y2="90" stroke="#4a4a4a" stroke-width="2" marker-end="url(#arrowhead)"/>
+                    <text x="410" y="80" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" fill="#767676">allow/deny</text>
+
+                    <!-- Resource -->
+                    <rect x="450" y="60" width="120" height="60" rx="8" fill="#faf6ef" stroke="#9a7b4f" stroke-width="2"/>
+                    <text x="510" y="95" text-anchor="middle" font-family="Outfit, sans-serif" font-size="14" font-weight="600" fill="#9a7b4f">Resource</text>
+                    <text x="510" y="112" text-anchor="middle" font-family="Outfit, sans-serif" font-size="11" fill="#4a4a4a">(Data, Feature)</text>
+
+                    <!-- Action label -->
+                    <text x="300" y="25" text-anchor="middle" font-family="Outfit, sans-serif" font-size="12" fill="#767676">Action: read, write, delete...</text>
+                </svg>
+                <p class="diagram-caption">Every access control system answers the same question: should this subject be allowed to perform this action on this resource?</p>
+            </div>
+        </section>
+
+        <section id="rbac">
+            <h2>RBAC: Role-Based Access Control</h2>
+
+            <div class="model-card">
+                <h3><span class="model-badge badge-rbac">RBAC</span> The Org Chart Approach</h3>
+
+                <p>RBAC assigns permissions to <strong>roles</strong>, then assigns roles to users. Users inherit all permissions from their roles.</p>
+
+                <h4>Core Concept</h4>
+                <p>Think of roles as job titles in an org chart. An "Editor" role might have permissions to create, read, and update content. A "Viewer" role might only have read permission. Users get one or more roles, and the system checks whether any of their roles grants the requested permission.</p>
+
+<pre><code>// Typical RBAC check
+function canAccess(user, action, resource) {
+  const userRoles = getRoles(user);
+  for (const role of userRoles) {
+    if (role.permissions.includes(`${resource}:${action}`)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// Example role definitions
+const roles = {
+  admin: {
+    permissions: ['posts:create', 'posts:read', 'posts:update', 'posts:delete',
+                  'users:create', 'users:read', 'users:update', 'users:delete']
+  },
+  editor: {
+    permissions: ['posts:create', 'posts:read', 'posts:update']
+  },
+  viewer: {
+    permissions: ['posts:read']
+  }
+};</code></pre>
+
+                <h4>When RBAC Shines</h4>
+                <ul>
+                    <li>Permissions map cleanly to organizational roles</li>
+                    <li>The number of distinct permission patterns is small</li>
+                    <li>You need simple auditing ("who has admin access?")</li>
+                    <li>Internal tools where users have clear job functions</li>
+                </ul>
+
+                <h4>Where RBAC Struggles</h4>
+                <ul>
+                    <li>Permissions depend on the resource itself (own data vs. others' data)</li>
+                    <li>Context matters (time, location, device)</li>
+                    <li>You end up with hundreds of micro-roles ("engineering-team-3-lead-read-only")</li>
+                </ul>
+            </div>
+
+            <div class="rule-of-thumb">
+                <strong>Rule of thumb:</strong> If you're creating more than 20 roles, or roles with names like "ProjectXViewerButNotForBudgetData," RBAC is probably the wrong model.
+            </div>
+        </section>
+
+        <section id="abac">
+            <h2>ABAC: Attribute-Based Access Control</h2>
+
+            <div class="model-card">
+                <h3><span class="model-badge badge-abac">ABAC</span> The Conditional Logic Approach</h3>
+
+                <p>ABAC makes decisions based on <strong>attributes</strong>—properties of the user, the resource, the action, and the environment. Permissions become boolean expressions over these attributes.</p>
+
+                <h4>Core Concept</h4>
+                <p>Instead of asking "does this user have the editor role?", ABAC asks "does this user's department match the document's department, and is the document not marked confidential, and is the request coming from the office network?"</p>
+
+<pre><code>// ABAC policy evaluation
+function canAccess(subject, action, resource, environment) {
+  // Example policy: Users can edit documents in their department
+  // during business hours if the document isn't confidential
+
+  const policies = [
+    {
+      effect: 'allow',
+      action: 'edit',
+      condition: (s, r, e) =>
+        s.department === r.department &&
+        r.classification !== 'confidential' &&
+        e.hour >= 9 && e.hour < 17
+    },
+    {
+      effect: 'allow',
+      action: 'read',
+      condition: (s, r, e) =>
+        s.department === r.department ||
+        r.classification === 'public'
+    }
+  ];
+
+  return policies.some(p =>
+    p.action === action &&
+    p.effect === 'allow' &&
+    p.condition(subject, resource, environment)
+  );
+}</code></pre>
+
+                <h4>Common Attributes</h4>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Example Attributes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Subject</strong></td>
+                                <td>department, clearance_level, job_title, years_employed, training_completed</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Resource</strong></td>
+                                <td>owner, classification, created_date, file_type, sensitivity_score</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Action</strong></td>
+                                <td>read, write, delete, approve, export, share</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Environment</strong></td>
+                                <td>time, ip_address, device_type, is_vpn, geo_location</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h4>When ABAC Shines</h4>
+                <ul>
+                    <li>Complex permission requirements that vary by context</li>
+                    <li>Regulatory compliance (HIPAA, GDPR) requiring fine-grained access</li>
+                    <li>Multi-tenant systems where isolation depends on attributes</li>
+                    <li>Dynamic permissions that can't be enumerated in advance</li>
+                </ul>
+
+                <h4>Where ABAC Struggles</h4>
+                <ul>
+                    <li>Difficult to audit ("who can access this document?" requires evaluating all users)</li>
+                    <li>Policy complexity can become unmanageable</li>
+                    <li>Performance overhead from complex attribute lookups</li>
+                    <li>Debugging why access was denied can be painful</li>
+                </ul>
+            </div>
+
+            <div class="callout callout-warning">
+                <div class="callout-title">⚠️ Warning: ABAC Complexity</div>
+                <p>ABAC's flexibility is a double-edged sword. It's easy to write policies that interact in unexpected ways. Always test with edge cases and have clear documentation for why each policy exists.</p>
+            </div>
+        </section>
+
+        <section id="pbac">
+            <h2>PBAC: Policy-Based Access Control</h2>
+
+            <div class="model-card">
+                <h3><span class="model-badge badge-pbac">PBAC</span> The Externalized Rules Approach</h3>
+
+                <p>PBAC externalizes authorization logic into a dedicated <strong>policy engine</strong>. Rather than scattering permission checks throughout your code, you define policies in a centralized system that answers "is this allowed?" for any request.</p>
+
+                <h4>Core Concept</h4>
+                <p>PBAC separates authorization from application code. Your app asks a policy engine "can user X do action Y on resource Z?" and gets back a decision. Policies are written in a dedicated language (like Rego for Open Policy Agent, or Cedar for AWS Verified Permissions).</p>
+
+<pre><code># Example Rego policy (Open Policy Agent)
+package app.authz
+
+default allow = false
+
+# Admins can do anything
+allow {
+    input.user.role == "admin"
+}
+
+# Users can read their own documents
+allow {
+    input.action == "read"
+    input.resource.type == "document"
+    input.resource.owner == input.user.id
+}
+
+# Editors can modify non-archived documents
+allow {
+    input.action == "write"
+    input.resource.type == "document"
+    input.user.role == "editor"
+    not input.resource.archived
+}</code></pre>
+
+<pre><code>// Application code just asks the policy engine
+async function canAccess(user, action, resource) {
+  const decision = await policyEngine.evaluate({
+    user: { id: user.id, role: user.role },
+    action: action,
+    resource: { type: resource.type, owner: resource.owner, ...resource }
+  });
+  return decision.allow;
+}</code></pre>
+
+                <h4>Popular Policy Engines</h4>
+                <ul>
+                    <li><strong>Open Policy Agent (OPA)</strong> — General-purpose, uses Rego language</li>
+                    <li><strong>Cedar</strong> — Amazon's policy language, used in AWS Verified Permissions</li>
+                    <li><strong>Casbin</strong> — Lightweight, supports multiple models (RBAC, ABAC, etc.)</li>
+                    <li><strong>Oso</strong> — Developer-friendly with tight application integration</li>
+                </ul>
+
+                <h4>When PBAC Shines</h4>
+                <ul>
+                    <li>Authorization logic needs to be consistent across multiple services</li>
+                    <li>Policies need to be auditable and version-controlled separately</li>
+                    <li>Non-engineers need to understand or modify policies</li>
+                    <li>You want to test authorization logic in isolation</li>
+                </ul>
+
+                <h4>Where PBAC Struggles</h4>
+                <ul>
+                    <li>Operational complexity of running a policy engine</li>
+                    <li>Learning curve for policy languages</li>
+                    <li>Latency overhead (mitigated by local caching/sidecars)</li>
+                    <li>Can feel like over-engineering for simple apps</li>
+                </ul>
+            </div>
+
+            <div class="callout callout-tip">
+                <div class="callout-title">💡 Tip</div>
+                <p>PBAC isn't a different conceptual model from RBAC or ABAC—it's a way to <em>implement</em> any model. A policy engine can enforce RBAC rules, ABAC conditions, or a hybrid. The key distinction is externalization: policies live outside your application code.</p>
+            </div>
+        </section>
+
+        <section id="rebac">
+            <h2>ReBAC: Relationship-Based Access Control</h2>
+
+            <div class="model-card">
+                <h3><span class="model-badge badge-rebac">ReBAC</span> The Graph Approach</h3>
+
+                <p>ReBAC derives permissions from <strong>relationships</strong> between entities. Access isn't about what attributes you have or which role you're in—it's about how you're connected to the resource in a relationship graph.</p>
+
+                <h4>Core Concept</h4>
+                <p>ReBAC models your system as a graph where nodes are users, groups, and resources, and edges are relationships like "owns," "member_of," "parent_folder." Permission checks become graph traversals: "Can user A access document X?" becomes "Is there a path from A to X that grants access?"</p>
+
+                <div class="diagram" aria-label="ReBAC relationship graph showing user-team-project-document relationships">
+                    <svg viewBox="0 0 650 280" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <marker id="arrow2" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                                <polygon points="0 0, 10 3.5, 0 7" fill="#767676"/>
+                            </marker>
+                        </defs>
+
+                        <!-- User nodes -->
+                        <circle cx="80" cy="80" r="35" fill="#e8f4f4" stroke="#2d6a6a" stroke-width="2"/>
+                        <text x="80" y="85" text-anchor="middle" font-family="Outfit, sans-serif" font-size="12" font-weight="600" fill="#2d6a6a">Alice</text>
+
+                        <circle cx="80" cy="200" r="35" fill="#e8f4f4" stroke="#2d6a6a" stroke-width="2"/>
+                        <text x="80" y="205" text-anchor="middle" font-family="Outfit, sans-serif" font-size="12" font-weight="600" fill="#2d6a6a">Bob</text>
+
+                        <!-- Team node -->
+                        <rect x="200" y="110" width="90" height="60" rx="8" fill="#faf6ef" stroke="#9a7b4f" stroke-width="2"/>
+                        <text x="245" y="145" text-anchor="middle" font-family="Outfit, sans-serif" font-size="12" font-weight="600" fill="#9a7b4f">Engineering</text>
+                        <text x="245" y="160" text-anchor="middle" font-family="Outfit, sans-serif" font-size="10" fill="#767676">Team</text>
+
+                        <!-- Project node -->
+                        <rect x="350" y="110" width="90" height="60" rx="8" fill="#fef6f3" stroke="#c45d3a" stroke-width="2"/>
+                        <text x="395" y="145" text-anchor="middle" font-family="Outfit, sans-serif" font-size="12" font-weight="600" fill="#c45d3a">Project X</text>
+                        <text x="395" y="160" text-anchor="middle" font-family="Outfit, sans-serif" font-size="10" fill="#767676">Project</text>
+
+                        <!-- Document node -->
+                        <rect x="500" y="110" width="90" height="60" rx="8" fill="#e8e4f4" stroke="#5a4a8a" stroke-width="2"/>
+                        <text x="545" y="145" text-anchor="middle" font-family="Outfit, sans-serif" font-size="12" font-weight="600" fill="#5a4a8a">spec.md</text>
+                        <text x="545" y="160" text-anchor="middle" font-family="Outfit, sans-serif" font-size="10" fill="#767676">Document</text>
+
+                        <!-- Relationships -->
+                        <line x1="115" y1="80" x2="195" y2="125" stroke="#767676" stroke-width="1.5" marker-end="url(#arrow2)"/>
+                        <text x="145" y="90" font-family="JetBrains Mono, monospace" font-size="9" fill="#767676">member_of</text>
+
+                        <line x1="115" y1="200" x2="195" y2="155" stroke="#767676" stroke-width="1.5" marker-end="url(#arrow2)"/>
+                        <text x="145" y="195" font-family="JetBrains Mono, monospace" font-size="9" fill="#767676">member_of</text>
+
+                        <line x1="290" y1="140" x2="345" y2="140" stroke="#767676" stroke-width="1.5" marker-end="url(#arrow2)"/>
+                        <text x="318" y="132" font-family="JetBrains Mono, monospace" font-size="9" fill="#767676">owns</text>
+
+                        <line x1="440" y1="140" x2="495" y2="140" stroke="#767676" stroke-width="1.5" marker-end="url(#arrow2)"/>
+                        <text x="468" y="132" font-family="JetBrains Mono, monospace" font-size="9" fill="#767676">contains</text>
+
+                        <!-- Permission derivation note -->
+                        <text x="325" y="250" text-anchor="middle" font-family="Outfit, sans-serif" font-size="11" fill="#767676">Alice can view spec.md because:</text>
+                        <text x="325" y="268" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" fill="#5a4a8a">Alice → member_of → Engineering → owns → Project X → contains → spec.md</text>
+                    </svg>
+                    <p class="diagram-caption">ReBAC derives permissions through relationship traversal. Alice's access to spec.md comes from her team membership.</p>
+                </div>
+
+<pre><code>// ReBAC tuple-based representation
+// Tuples: (object, relation, subject)
+const relationships = [
+  { object: 'team:engineering', relation: 'member', subject: 'user:alice' },
+  { object: 'team:engineering', relation: 'member', subject: 'user:bob' },
+  { object: 'project:x', relation: 'owner', subject: 'team:engineering' },
+  { object: 'doc:spec', relation: 'parent', subject: 'project:x' }
+];
+
+// Permission rules define how relations compose
+const rules = {
+  'doc': {
+    'viewer': (doc) => [
+      // Direct viewers
+      ...getRelated(doc, 'viewer'),
+      // Parent project's editors can view
+      ...getRelated(doc, 'parent').flatMap(p => getRelated(p, 'editor')),
+      // Parent project owner's members can view
+      ...getRelated(doc, 'parent')
+        .flatMap(p => getRelated(p, 'owner'))
+        .flatMap(t => getRelated(t, 'member'))
+    ]
+  }
+};</code></pre>
+
+                <h4>Popular ReBAC Systems</h4>
+                <ul>
+                    <li><strong>Google Zanzibar</strong> — The paper that defined ReBAC at scale</li>
+                    <li><strong>SpiceDB</strong> — Open-source Zanzibar implementation</li>
+                    <li><strong>Auth0 FGA</strong> — Fine-grained authorization service</li>
+                    <li><strong>Ory Keto</strong> — Open-source permissions server</li>
+                </ul>
+
+                <h4>When ReBAC Shines</h4>
+                <ul>
+                    <li>Collaborative apps (Google Docs, Notion, Slack-like systems)</li>
+                    <li>Permissions naturally follow ownership hierarchies</li>
+                    <li>Sharing with specific users/groups is a core feature</li>
+                    <li>You need to answer "who can access this?" efficiently</li>
+                </ul>
+
+                <h4>Where ReBAC Struggles</h4>
+                <ul>
+                    <li>Requires maintaining a relationship graph (operational complexity)</li>
+                    <li>Permissions not based on relationships need workarounds</li>
+                    <li>Learning curve for relationship modeling</li>
+                    <li>Debugging requires understanding graph traversal</li>
+                </ul>
+            </div>
+
+            <div class="rule-of-thumb">
+                <strong>Rule of thumb:</strong> If your UI has "Share" buttons and users think in terms of "my documents" vs "shared with me," ReBAC probably matches your mental model.
+            </div>
+        </section>
+
+        <section id="comparison">
+            <h2>Comparing the Models</h2>
+
+            <div class="diagram" aria-label="Architecture diagram comparing RBAC, ABAC, PBAC, and ReBAC approaches">
+                <svg viewBox="0 0 700 320" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <marker id="arrow3" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+                            <polygon points="0 0, 8 3, 0 6" fill="#767676"/>
+                        </marker>
+                    </defs>
+
+                    <!-- RBAC -->
+                    <rect x="30" y="30" width="140" height="120" rx="8" fill="#e8f4f4" stroke="#2d6a6a" stroke-width="2"/>
+                    <text x="100" y="55" text-anchor="middle" font-family="Fraunces, serif" font-size="14" font-weight="600" fill="#2d6a6a">RBAC</text>
+                    <text x="100" y="80" text-anchor="middle" font-family="Outfit, sans-serif" font-size="10" fill="#4a4a4a">User → Role → Permission</text>
+                    <text x="100" y="105" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#767676">user.roles</text>
+                    <text x="100" y="120" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#767676">.includes('admin')</text>
+                    <text x="100" y="140" text-anchor="middle" font-family="Outfit, sans-serif" font-size="9" fill="#2d6a6a">Static assignment</text>
+
+                    <!-- ABAC -->
+                    <rect x="200" y="30" width="140" height="120" rx="8" fill="#fef6f3" stroke="#c45d3a" stroke-width="2"/>
+                    <text x="270" y="55" text-anchor="middle" font-family="Fraunces, serif" font-size="14" font-weight="600" fill="#c45d3a">ABAC</text>
+                    <text x="270" y="80" text-anchor="middle" font-family="Outfit, sans-serif" font-size="10" fill="#4a4a4a">Attributes → Decision</text>
+                    <text x="270" y="105" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#767676">user.dept ==</text>
+                    <text x="270" y="120" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#767676">resource.dept</text>
+                    <text x="270" y="140" text-anchor="middle" font-family="Outfit, sans-serif" font-size="9" fill="#c45d3a">Runtime evaluation</text>
+
+                    <!-- PBAC -->
+                    <rect x="370" y="30" width="140" height="120" rx="8" fill="#faf6ef" stroke="#9a7b4f" stroke-width="2"/>
+                    <text x="440" y="55" text-anchor="middle" font-family="Fraunces, serif" font-size="14" font-weight="600" fill="#9a7b4f">PBAC</text>
+                    <text x="440" y="80" text-anchor="middle" font-family="Outfit, sans-serif" font-size="10" fill="#4a4a4a">Policy Engine → Decision</text>
+                    <text x="440" y="105" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#767676">opa.evaluate(</text>
+                    <text x="440" y="120" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#767676">  input, policy)</text>
+                    <text x="440" y="140" text-anchor="middle" font-family="Outfit, sans-serif" font-size="9" fill="#9a7b4f">Externalized logic</text>
+
+                    <!-- ReBAC -->
+                    <rect x="540" y="30" width="140" height="120" rx="8" fill="#e8e4f4" stroke="#5a4a8a" stroke-width="2"/>
+                    <text x="610" y="55" text-anchor="middle" font-family="Fraunces, serif" font-size="14" font-weight="600" fill="#5a4a8a">ReBAC</text>
+                    <text x="610" y="80" text-anchor="middle" font-family="Outfit, sans-serif" font-size="10" fill="#4a4a4a">Relationship → Permission</text>
+                    <text x="610" y="105" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#767676">check(user,</text>
+                    <text x="610" y="120" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#767676">  'viewer', doc)</text>
+                    <text x="610" y="140" text-anchor="middle" font-family="Outfit, sans-serif" font-size="9" fill="#5a4a8a">Graph traversal</text>
+
+                    <!-- Spectrum bar -->
+                    <rect x="30" y="200" width="650" height="40" rx="8" fill="#f7f5f0" stroke="#e5e2dc" stroke-width="1"/>
+
+                    <!-- Gradient fill -->
+                    <defs>
+                        <linearGradient id="spectrumGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" style="stop-color:#2d6a6a;stop-opacity:0.3"/>
+                            <stop offset="100%" style="stop-color:#5a4a8a;stop-opacity:0.3"/>
+                        </linearGradient>
+                    </defs>
+                    <rect x="30" y="200" width="650" height="40" rx="8" fill="url(#spectrumGrad)"/>
+
+                    <!-- Labels -->
+                    <text x="50" y="225" font-family="Outfit, sans-serif" font-size="11" fill="#4a4a4a">Simple</text>
+                    <text x="660" y="225" text-anchor="end" font-family="Outfit, sans-serif" font-size="11" fill="#4a4a4a">Flexible</text>
+
+                    <!-- Position markers -->
+                    <circle cx="100" cy="180" r="5" fill="#2d6a6a"/>
+                    <line x1="100" y1="150" x2="100" y2="175" stroke="#2d6a6a" stroke-width="1"/>
+
+                    <circle cx="270" cy="180" r="5" fill="#c45d3a"/>
+                    <line x1="270" y1="150" x2="270" y2="175" stroke="#c45d3a" stroke-width="1"/>
+
+                    <circle cx="440" cy="180" r="5" fill="#9a7b4f"/>
+                    <line x1="440" y1="150" x2="440" y2="175" stroke="#9a7b4f" stroke-width="1"/>
+
+                    <circle cx="610" cy="180" r="5" fill="#5a4a8a"/>
+                    <line x1="610" y1="150" x2="610" y2="175" stroke="#5a4a8a" stroke-width="1"/>
+
+                    <!-- Bottom labels -->
+                    <text x="100" y="270" text-anchor="middle" font-family="Outfit, sans-serif" font-size="10" fill="#767676">Easiest to</text>
+                    <text x="100" y="283" text-anchor="middle" font-family="Outfit, sans-serif" font-size="10" fill="#767676">implement</text>
+
+                    <text x="270" y="270" text-anchor="middle" font-family="Outfit, sans-serif" font-size="10" fill="#767676">Most flexible</text>
+                    <text x="270" y="283" text-anchor="middle" font-family="Outfit, sans-serif" font-size="10" fill="#767676">conditions</text>
+
+                    <text x="440" y="270" text-anchor="middle" font-family="Outfit, sans-serif" font-size="10" fill="#767676">Best for</text>
+                    <text x="440" y="283" text-anchor="middle" font-family="Outfit, sans-serif" font-size="10" fill="#767676">governance</text>
+
+                    <text x="610" y="270" text-anchor="middle" font-family="Outfit, sans-serif" font-size="10" fill="#767676">Best for</text>
+                    <text x="610" y="283" text-anchor="middle" font-family="Outfit, sans-serif" font-size="10" fill="#767676">collaboration</text>
+                </svg>
+                <p class="diagram-caption">Each model occupies a different point on the simplicity-flexibility spectrum. PBAC is orthogonal—it's an implementation strategy that can enforce any model.</p>
+            </div>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Criterion</th>
+                            <th>RBAC</th>
+                            <th>ABAC</th>
+                            <th>PBAC</th>
+                            <th>ReBAC</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Decision basis</strong></td>
+                            <td>Role membership</td>
+                            <td>Attribute conditions</td>
+                            <td>Policy rules</td>
+                            <td>Relationship graph</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Implementation effort</strong></td>
+                            <td>Low</td>
+                            <td>Medium-High</td>
+                            <td>Medium</td>
+                            <td>Medium-High</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Query complexity</strong></td>
+                            <td>"Who has role X?"</td>
+                            <td>"Who satisfies condition Y?"</td>
+                            <td>"Who matches policy Z?"</td>
+                            <td>"Who is connected to resource R?"</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Audit friendliness</strong></td>
+                            <td>Excellent</td>
+                            <td>Poor</td>
+                            <td>Good (if policies documented)</td>
+                            <td>Good (graph is explicit)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Scales to</strong></td>
+                            <td>~20 roles</td>
+                            <td>Unlimited conditions</td>
+                            <td>Depends on engine</td>
+                            <td>Millions of relationships</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Best for</strong></td>
+                            <td>Internal tools, clear job functions</td>
+                            <td>Compliance, dynamic conditions</td>
+                            <td>Microservices, governance</td>
+                            <td>Collaborative apps, sharing</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <details class="stop-check">
+                <summary>🛑 Stop and Check: Which model fits?</summary>
+                <div class="answer">
+                    <p><strong>Scenario:</strong> You're building a healthcare portal. Doctors should see patients in their department, but also patients they're treating. Nurses see patients on their current shift floor. Emergency staff can see anyone during declared emergencies.</p>
+                    <p><strong>Answer:</strong> This is a classic ABAC scenario. The conditions cross multiple dimensions (department, treatment relationship, shift assignment, emergency status) that don't map cleanly to roles or static relationships. You might use PBAC to implement these ABAC-style policies in a centralized, auditable way.</p>
+                </div>
+            </details>
+        </section>
+
+        <section id="examples">
+            <h2>Worked Examples</h2>
+
+            <h3>Example 1: SaaS Application with Teams</h3>
+            <p><strong>Scenario:</strong> A project management tool where users belong to organizations. Each org has projects, and projects have tasks. Users can be admins, members, or guests at the org level.</p>
+
+            <h4>RBAC Approach</h4>
+<pre><code>// Simple but limited
+const permissions = {
+  org_admin: ['org:*', 'project:*', 'task:*'],
+  org_member: ['project:read', 'task:read', 'task:create', 'task:update'],
+  org_guest: ['project:read', 'task:read']
+};
+
+function canAccess(user, action, resource) {
+  const role = getUserOrgRole(user, resource.orgId);
+  return permissions[role]?.some(p =>
+    p === `${resource.type}:*` || p === `${resource.type}:${action}`
+  );
+}
+// Problem: Can't distinguish "my tasks" from "others' tasks"</code></pre>
+
+            <h4>ReBAC Approach</h4>
+<pre><code>// Relationships model natural ownership
+// user:alice member org:acme
+// org:acme parent project:roadmap
+// project:roadmap parent task:123
+// task:123 assignee user:alice
+
+// Permission rules
+// task viewer = task assignee + task parent viewer
+// task editor = task assignee + task parent editor
+// project viewer = project parent member
+// project editor = project parent admin
+
+function canAccess(user, action, resource) {
+  const relation = action === 'read' ? 'viewer' : 'editor';
+  return relationshipStore.check(user, relation, resource);
+}
+// Now "my tasks" vs "team tasks" is naturally modeled</code></pre>
+
+            <div class="callout callout-note">
+                <div class="callout-title">📝 Note</div>
+                <p>In this scenario, ReBAC shines because the permission model naturally follows the org → project → task hierarchy, and user ownership (assignee) matters.</p>
+            </div>
+
+            <h3>Example 2: Content Publishing with Approval Workflow</h3>
+            <p><strong>Scenario:</strong> A CMS where content goes through draft → review → published states. Junior editors can create and edit drafts. Senior editors can approve into review. Publishers can publish. But content marked "sensitive" needs executive approval.</p>
+
+            <h4>ABAC Approach</h4>
+<pre><code>const policies = [
+  {
+    action: 'edit',
+    conditions: [
+      (s, r) => r.state === 'draft',
+      (s, r) => ['junior_editor', 'senior_editor', 'publisher'].includes(s.role)
+    ]
+  },
+  {
+    action: 'submit_for_review',
+    conditions: [
+      (s, r) => r.state === 'draft',
+      (s, r) => ['senior_editor', 'publisher'].includes(s.role)
+    ]
+  },
+  {
+    action: 'publish',
+    conditions: [
+      (s, r) => r.state === 'review',
+      (s, r) => r.sensitive === false && s.role === 'publisher',
+    ]
+  },
+  {
+    action: 'publish',
+    conditions: [
+      (s, r) => r.state === 'review',
+      (s, r) => r.sensitive === true && s.role === 'executive',
+    ]
+  }
+];
+
+function canAccess(subject, action, resource) {
+  return policies
+    .filter(p => p.action === action)
+    .some(p => p.conditions.every(c => c(subject, resource)));
+}</code></pre>
+
+            <p>Here ABAC works well because the permission depends heavily on the <em>state</em> of the resource, which is an attribute that changes over time. Role-only approaches would struggle with the state machine.</p>
+        </section>
+
+        <section id="mistakes">
+            <h2>Common Mistakes and How to Avoid Them</h2>
+
+            <div class="model-card">
+                <h3>❌ Mistake 1: Role Explosion in RBAC</h3>
+                <p><strong>Symptom:</strong> You have roles like <code>marketing-team-east-coast-read-only-except-budgets</code>.</p>
+                <p><strong>Cause:</strong> Trying to encode attribute-based logic into role names.</p>
+                <p><strong>Fix:</strong> Recognize that you've outgrown RBAC. Move to ABAC or ReBAC where the attributes/relationships are explicit, not encoded in role names.</p>
+            </div>
+
+            <div class="model-card">
+                <h3>❌ Mistake 2: ABAC Policy Spaghetti</h3>
+                <p><strong>Symptom:</strong> Nobody can explain why a user does or doesn't have access. Debugging requires reading 50 policy rules.</p>
+                <p><strong>Cause:</strong> Policies grew organically without design principles.</p>
+                <p><strong>Fix:</strong> Refactor into a layered policy structure: base policies, exception policies, emergency overrides. Use a policy engine (PBAC) to get better tooling for testing and visualization.</p>
+            </div>
+
+            <div class="model-card">
+                <h3>❌ Mistake 3: Ignoring the "Who Can Access This?" Query</h3>
+                <p><strong>Symptom:</strong> You can check if Alice can read document X, but you can't answer "list everyone who can read document X."</p>
+                <p><strong>Cause:</strong> ABAC policies are designed for point queries, not enumeration.</p>
+                <p><strong>Fix:</strong> If enumeration matters (compliance audits, sharing dialogs), consider ReBAC where the relationship graph makes this query natural, or maintain a materialized view of access.</p>
+            </div>
+
+            <div class="model-card">
+                <h3>❌ Mistake 4: Putting Authorization Logic Everywhere</h3>
+                <p><strong>Symptom:</strong> Permission checks are scattered across controllers, services, and even frontend code. Each copy is slightly different.</p>
+                <p><strong>Cause:</strong> No centralized authorization layer.</p>
+                <p><strong>Fix:</strong> Adopt PBAC principles even if you don't use a formal policy engine. Centralize all authorization decisions into a single module or service. Your controllers should call <code>authz.check()</code>, not implement their own logic.</p>
+            </div>
+
+            <div class="model-card">
+                <h3>❌ Mistake 5: Conflating Authentication and Authorization</h3>
+                <p><strong>Symptom:</strong> Your <code>requireAuth()</code> middleware also checks permissions, or roles are stored in JWT claims and treated as the source of truth.</p>
+                <p><strong>Cause:</strong> Blurring the line between "who are you?" and "what can you do?"</p>
+                <p><strong>Fix:</strong> Separate concerns. Authentication establishes identity. Authorization (using any of these models) decides permissions. JWT claims can include role hints, but the authoritative permission check should happen against your current data, not a token issued hours ago.</p>
+            </div>
+        </section>
+
+        <section id="decision">
+            <h2>How to Choose</h2>
+
+            <div class="decision-tree">
+<pre>START: What best describes your permission model?
+
+├─ "Users have job titles, permissions map to titles"
+│   └─ → RBAC (keep it simple)
+│
+├─ "Users can share things with each other"
+│   └─ → ReBAC (relationships are your model)
+│
+├─ "It depends on many factors at runtime"
+│   │
+│   ├─ "And we need auditors to understand policies"
+│   │   └─ → PBAC with ABAC-style policies
+│   │
+│   └─ "And we need maximum flexibility"
+│       └─ → ABAC (but invest in tooling)
+│
+├─ "We're building microservices with shared auth"
+│   └─ → PBAC (centralize authorization)
+│
+└─ "We need all of the above"
+    └─ → Hybrid approach (common in practice)
+        • RBAC for coarse-grained (admin vs user)
+        • ReBAC for resource ownership
+        • ABAC for contextual rules
+        • PBAC to unify them in one engine</pre>
+            </div>
+
+            <div class="callout callout-tip">
+                <div class="callout-title">💡 Real-World Hybrids</div>
+                <p>Most production systems combine models. Google Docs uses ReBAC for sharing but RBAC for admin capabilities. AWS uses RBAC (IAM roles) with ABAC (policy conditions) implemented via PBAC (IAM policy engine). Don't feel locked into one model—they compose.</p>
+            </div>
+        </section>
+
+        <section id="quiz">
+            <h2>Quick Quiz</h2>
+
+            <details class="quiz-question">
+                <summary>1. A user should only be able to edit documents they created. Which model most naturally expresses this?</summary>
+                <div class="answer">
+                    <p><strong>ReBAC</strong> — This is a relationship: <code>user:alice creator doc:123</code>. The permission "can edit" derives from the "creator" relationship. While ABAC could also handle this (<code>user.id === doc.creatorId</code>), ReBAC makes the relationship a first-class concept.</p>
+                </div>
+            </details>
+
+            <details class="quiz-question">
+                <summary>2. Your compliance team needs to answer "show me everyone who accessed patient records last month." Which model helps most?</summary>
+                <div class="answer">
+                    <p><strong>PBAC</strong> — While all models can technically be audited, PBAC's centralized policy engine typically provides better logging, query capabilities, and audit trails. The engine becomes a single point where all access decisions are recorded.</p>
+                </div>
+            </details>
+
+            <details class="quiz-question">
+                <summary>3. You need to block all data exports after 6pm on weekdays. Which model handles this best?</summary>
+                <div class="answer">
+                    <p><strong>ABAC</strong> — This is a time-based contextual rule. ABAC's environment attributes (<code>env.dayOfWeek</code>, <code>env.hour</code>) make this straightforward. RBAC can't express time conditions, and ReBAC's relationships don't naturally model time.</p>
+                </div>
+            </details>
+
+            <details class="quiz-question">
+                <summary>4. What's the key difference between PBAC and the other models?</summary>
+                <div class="answer">
+                    <p><strong>PBAC is an implementation strategy, not a conceptual model.</strong> RBAC, ABAC, and ReBAC define <em>how you think about</em> permissions (roles, attributes, relationships). PBAC defines <em>where you put</em> the logic (external policy engine). You can implement RBAC rules, ABAC conditions, or ReBAC relationships using a PBAC engine.</p>
+                </div>
+            </details>
+
+            <details class="quiz-question">
+                <summary>5. Why might RBAC fail for a B2B SaaS product?</summary>
+                <div class="answer">
+                    <p>In B2B SaaS, different customers often need different permission structures. One org might want a flat structure (everyone can edit), another wants strict hierarchies. RBAC's fixed role definitions can't accommodate this variation without either (a) letting customers define their own roles (complexity) or (b) creating org-specific roles (role explosion). ReBAC often works better because relationships can be configured per-org without changing the core model.</p>
+                </div>
+            </details>
+        </section>
+
+        <section id="summary">
+            <h2>Summary and Next Steps</h2>
+
+            <div class="quick-summary">
+                <h3>Key Takeaways</h3>
+                <ul>
+                    <li><strong>RBAC</strong>: Assign roles to users, permissions to roles. Simple, auditable, but rigid.</li>
+                    <li><strong>ABAC</strong>: Evaluate attribute conditions at runtime. Flexible, but complex to audit.</li>
+                    <li><strong>PBAC</strong>: Externalize authorization to a policy engine. Good governance, operational overhead.</li>
+                    <li><strong>ReBAC</strong>: Derive permissions from relationship graphs. Natural for collaborative apps.</li>
+                    <li><strong>In practice</strong>: Most systems use hybrids. Start simple, evolve as needed.</li>
+                </ul>
+            </div>
+
+            <h3>Where to Go from Here</h3>
+            <ul>
+                <li><strong>Try Open Policy Agent</strong> — Write Rego policies to see PBAC in action</li>
+                <li><strong>Read the Zanzibar paper</strong> — Google's foundational ReBAC design</li>
+                <li><strong>Explore SpiceDB or Auth0 FGA</strong> — Hands-on ReBAC implementation</li>
+                <li><strong>Audit your current system</strong> — Which model does it use? Where does it struggle?</li>
+                <li><strong>Model before coding</strong> — Sketch your permission requirements before choosing a model</li>
+            </ul>
+
+            <div class="rule-of-thumb">
+                <strong>Final thought:</strong> The best access control model is the one your team can understand, maintain, and evolve. A simple RBAC system that everyone understands beats a sophisticated ABAC/ReBAC hybrid that nobody can debug.
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>Built for developers who want to get authorization right the first time.</p>
+    </footer>
+
+    <script>
+        function toggleTheme() {
+            const html = document.documentElement;
+            const current = html.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            localStorage.setItem('theme', next);
+        }
+
+        // Initialize theme
+        (function() {
+            const saved = localStorage.getItem('theme');
+            const preferred = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', saved || preferred);
+        })();
+    </script>
+</body>
+</html>

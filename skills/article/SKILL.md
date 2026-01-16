@@ -43,7 +43,7 @@ The subject can be:
 
 If `--all` is present, enter batch mode:
 
-1. **Read the queue file** at `.claude/article-queue.md`
+1. **Read the queue file** at `~/.claude/article-queue.md` (expand `~` to actual home path)
 2. **Extract unchecked topics** - items matching `- [ ] <topic>`
 3. **If queue is empty**, report "No articles in queue" and exit
 4. **For each topic**:
@@ -386,7 +386,7 @@ Claude: [Reads .claude/article-queue.md]
 7. **Report completion** briefly confirming the article was generated and opened
 
 ### Batch Mode (`--all` flag)
-1. **Read queue** from `.claude/article-queue.md`
+1. **Read queue** from `~/.claude/article-queue.md`
 2. **Extract unchecked topics** matching `- [ ] <topic>`
 3. **For each topic**: generate article with defaults, save file, mark complete in queue
 4. **Open articles** if 5 or fewer were generated; otherwise just list file paths

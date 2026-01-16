@@ -16,7 +16,7 @@ This skill displays the article topic queue and offers to generate an article fr
 
 ## Queue Storage
 
-The queue is stored in `.claude/article-queue.md` in the project root.
+The queue is stored globally at `~/.claude/article-queue.md` (user's home directory).
 
 **Queue File Format:**
 ```markdown
@@ -37,7 +37,7 @@ Items marked with `[x]` have already been generated.
 
 ### Step 1: Read Queue File
 
-1. Use Read tool to check if `.claude/article-queue.md` exists
+1. Use Read tool to check if `~/.claude/article-queue.md` exists (expand `~` to actual home path)
 2. If it doesn't exist, inform the user the queue is empty and suggest using `/article-add`
 
 ### Step 2: Parse Queue Contents

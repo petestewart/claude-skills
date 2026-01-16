@@ -21,7 +21,7 @@ Examples:
 
 ## Queue Storage
 
-The queue is stored in `.claude/article-queue.md` in the project root.
+The queue is stored globally at `~/.claude/article-queue.md` (user's home directory).
 
 **Queue File Format:**
 ```markdown
@@ -46,7 +46,7 @@ If no topic is provided, respond with a brief error: "No topic provided. Usage: 
 
 ### Step 2: Read or Create Queue File
 
-1. Check if `.claude/article-queue.md` exists using Read tool
+1. Check if `~/.claude/article-queue.md` exists using Read tool (expand `~` to actual home path)
 2. If it doesn't exist, create it with the initial template:
 
 ```markdown
@@ -85,8 +85,8 @@ Claude: Added "understanding TCP congestion control" to queue (3 topics).
 
 ## Error Handling
 
-- If the `.claude/` directory doesn't exist, create it
-- If the topic is empty after parsing, prompt for input
+- If `~/.claude/` directory doesn't exist, create it
+- If the topic is empty after parsing, report error with usage
 - If writing fails, report the error clearly
 
 ## Related Skills
