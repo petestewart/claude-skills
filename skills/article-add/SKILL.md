@@ -42,12 +42,7 @@ Topics queued for article generation.
 
 Extract the topic from the user's input. The topic is everything after `/article-add `.
 
-If no topic is provided, use AskUserQuestion to prompt:
-- Header: "Topic"
-- Question: "What topic would you like to add to your article queue?"
-- Options:
-  - "Enter a topic" - Type a custom topic
-  - "Cancel" - Don't add anything
+If no topic is provided, respond with a brief error: "No topic provided. Usage: `/article-add <topic>`"
 
 ### Step 2: Read or Create Queue File
 
@@ -71,19 +66,21 @@ Topics queued for article generation.
 
 ### Step 4: Confirm to User
 
-Report success with:
+**Keep confirmation minimal.** Report only:
 - The topic that was added
-- The current number of items in the queue
-- A reminder they can use `/article-queue` to see all topics or generate an article
+- The current queue count
+
+**Do NOT:**
+- Ask follow-up questions
+- Suggest generating the article now
+- Prompt for any additional input
 
 ## Example Interaction
 
 ```
 User: /article-add understanding TCP congestion control
 
-Claude: Added "understanding TCP congestion control" to your article queue.
-
-Queue now has 3 topics. Use `/article-queue` to see the full list or generate an article.
+Claude: Added "understanding TCP congestion control" to queue (3 topics).
 ```
 
 ## Error Handling
