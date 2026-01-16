@@ -324,25 +324,25 @@ Claude: [Processes input as plain text topic]
 User: [Selects: "Developers new to topic", "Standard tutorial", "Practical examples" + "Common pitfalls"]
 Claude: [Generates HTML article tailored to selections]
         [Saves to ./article-kubernetes-pods.html]
-        [Announces file location to user]
+        [Opens article in browser automatically]
 
 User: /article how DNS works --oneshot
 Claude: [Detects --oneshot flag, skips questions]
         [Generates article with default settings]
-        [Saves to ./article-how-dns-works.html]
+        [Saves and opens ./article-how-dns-works.html]
 
 User: /article ./docs/PLAN.md
 Claude: [Reads the PLAN.md file]
         [Asks clarifying questions]
 User: [Selects preferences]
 Claude: [Creates an article explaining the plan's concepts]
-        [Saves to ./article-plan-overview.html]
+        [Saves and opens ./article-plan-overview.html]
 
 User: /article https://react.dev/learn/thinking-in-react --oneshot
 Claude: [Fetches the React documentation page]
         [Skips questions due to --oneshot]
         [Creates article with default settings]
-        [Saves to ./article-thinking-in-react.html]
+        [Saves and opens ./article-thinking-in-react.html]
 ```
 
 ## Execution Workflow
@@ -352,7 +352,8 @@ Claude: [Fetches the React documentation page]
 3. **Ask clarifying questions** using AskUserQuestion (skip if `--oneshot`)
 4. **Generate the HTML article** following all requirements above, tailored to user preferences
 5. **Save the file** to the current directory with a descriptive filename
-6. **Report completion** with the file path for the user to open
+6. **Open the article** automatically using Bash: `open <filepath>` (macOS) or `xdg-open <filepath>` (Linux)
+7. **Report completion** briefly confirming the article was generated and opened
 
 ## Quick Reference
 
