@@ -14,6 +14,7 @@ This skill creates self-contained, educational HTML articles with inline SVG dia
 /article <subject>
 /article <subject> --oneshot
 /article --all
+/article --all -l
 ```
 
 The subject can be:
@@ -24,6 +25,8 @@ The subject can be:
 **Flags:**
 - `--oneshot` - Skip clarifying questions and generate the article immediately using defaults
 - `--all` - Generate all articles from the queue (implies `--oneshot` behavior for each)
+- `-g` - Use global queue (default): `~/.claude/article-queue.md`
+- `-l` - Use local/project queue: `.claude/article-queue.md`
 
 ## Input Processing
 
@@ -43,10 +46,13 @@ The subject can be:
 
 If `--all` is present, enter batch mode:
 
-1. **Read the queue file** at `~/.claude/article-queue.md` (expand `~` to actual home path)
-2. **Extract unchecked topics** - items matching `- [ ] <topic>`
-3. **If queue is empty**, report "No articles in queue" and exit
-4. **For each topic**:
+1. **Determine queue location**:
+   - `-l` flag → use local queue (`.claude/article-queue.md`)
+   - `-g` flag or no flag → use global queue (`~/.claude/article-queue.md`)
+2. **Read the queue file** (expand `~` to actual home path for global)
+3. **Extract unchecked topics** - items matching `- [ ] <topic>`
+4. **If queue is empty**, report "No articles in queue" and exit
+5. **For each topic**:
    - Generate the article using `--oneshot` defaults (no clarifying questions)
    - Save to `./article-<slugified-topic>.html`
    - Mark the topic as complete in the queue file: `- [x] <topic>`
@@ -364,7 +370,7 @@ Claude: [Fetches the React documentation page]
         [Saves and opens ./article-thinking-in-react.html]
 
 User: /article --all
-Claude: [Reads .claude/article-queue.md]
+Claude: [Reads ~/.claude/article-queue.md (global)]
         [Finds 3 unchecked topics]
         [Generates article 1/3: "TCP congestion control"]
         [Generates article 2/3: "WebSocket vs SSE"]
@@ -372,6 +378,14 @@ Claude: [Reads .claude/article-queue.md]
         [Marks all 3 as complete in queue]
         [Opens all 3 articles (fewer than 5)]
         Generated 3 articles and opened them in your browser.
+
+User: /article --all -l
+Claude: [Reads .claude/article-queue.md (local)]
+        [Finds 1 unchecked topic]
+        [Generates article: "project architecture overview"]
+        [Marks complete in local queue]
+        [Opens article]
+        Generated 1 article and opened it in your browser.
 ```
 
 ## Execution Workflow
@@ -386,11 +400,12 @@ Claude: [Reads .claude/article-queue.md]
 7. **Report completion** briefly confirming the article was generated and opened
 
 ### Batch Mode (`--all` flag)
-1. **Read queue** from `~/.claude/article-queue.md`
-2. **Extract unchecked topics** matching `- [ ] <topic>`
-3. **For each topic**: generate article with defaults, save file, mark complete in queue
-4. **Open articles** if 5 or fewer were generated; otherwise just list file paths
-5. **Report completion** with count and paths
+1. **Determine queue** based on `-g` (global, default) or `-l` (local) flag
+2. **Read queue** from the determined location
+3. **Extract unchecked topics** matching `- [ ] <topic>`
+4. **For each topic**: generate article with defaults, save file, mark complete in queue
+5. **Open articles** if 5 or fewer were generated; otherwise just list file paths
+6. **Report completion** with count and paths
 
 ## Quick Reference
 
@@ -404,6 +419,7 @@ Claude: [Reads .claude/article-queue.md]
 - `/article <subject>`
 - `/article <subject> --oneshot`
 - `/article --all`
+- `/article --all -l`
 - "write an article about..."
 - "create an article on..."
 - "explain this topic as an article..."
@@ -411,6 +427,8 @@ Claude: [Reads .claude/article-queue.md]
 **Flags:**
 - `--oneshot` - Skip clarifying questions, use defaults
 - `--all` - Generate all queued articles (opens if ≤5, lists paths if >5)
+- `-g` - Use global queue (default)
+- `-l` - Use local/project queue
 
 **Output:** Single HTML file with Google Fonts, viewable in any browser.
 

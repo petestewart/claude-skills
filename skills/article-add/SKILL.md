@@ -12,16 +12,23 @@ This skill adds topics to a queue for later article generation using the `/artic
 
 ```
 /article-add <topic>
+/article-add -l <topic>
 ```
 
+**Flags:**
+- `-g` - Use global queue (default): `~/.claude/article-queue.md`
+- `-l` - Use local/project queue: `.claude/article-queue.md`
+
 Examples:
-- `/article-add how kubernetes networking works`
+- `/article-add how kubernetes networking works` - adds to global queue
+- `/article-add -l project-specific notes` - adds to local project queue
 - `/article-add the history of Unix file permissions`
-- `/article-add WebSocket vs Server-Sent Events comparison`
 
 ## Queue Storage
 
-The queue is stored globally at `~/.claude/article-queue.md` (user's home directory).
+**Two queue locations are supported:**
+- **Global** (default): `~/.claude/article-queue.md` - shared across all projects
+- **Local**: `.claude/article-queue.md` - project-specific queue
 
 **Queue File Format:**
 ```markdown
@@ -38,16 +45,19 @@ Topics queued for article generation.
 
 ## Execution Workflow
 
-### Step 1: Parse the Topic
+### Step 1: Parse Input and Flags
 
-Extract the topic from the user's input. The topic is everything after `/article-add `.
+1. Check for `-l` flag → use local queue (`.claude/article-queue.md`)
+2. Check for `-g` flag or no flag → use global queue (`~/.claude/article-queue.md`)
+3. Extract the topic (everything after the command and flags)
 
 If no topic is provided, respond with a brief error: "No topic provided. Usage: `/article-add <topic>`"
 
 ### Step 2: Read or Create Queue File
 
-1. Check if `~/.claude/article-queue.md` exists using Read tool (expand `~` to actual home path)
-2. If it doesn't exist, create it with the initial template:
+1. Determine queue path based on flag (global is default)
+2. Check if the queue file exists using Read tool (expand `~` to actual home path for global)
+3. If it doesn't exist, create it with the initial template:
 
 ```markdown
 # Article Queue
@@ -81,11 +91,15 @@ Topics queued for article generation.
 User: /article-add understanding TCP congestion control
 
 Claude: Added "understanding TCP congestion control" to queue (3 topics).
+
+User: /article-add -l project architecture overview
+
+Claude: Added "project architecture overview" to local queue (1 topic).
 ```
 
 ## Error Handling
 
-- If `~/.claude/` directory doesn't exist, create it
+- If queue directory doesn't exist (`~/.claude/` or `.claude/`), create it
 - If the topic is empty after parsing, report error with usage
 - If writing fails, report the error clearly
 

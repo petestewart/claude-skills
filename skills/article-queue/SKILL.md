@@ -12,11 +12,18 @@ This skill displays the article topic queue and offers to generate an article fr
 
 ```
 /article-queue
+/article-queue -l
 ```
+
+**Flags:**
+- `-g` - Use global queue (default): `~/.claude/article-queue.md`
+- `-l` - Use local/project queue: `.claude/article-queue.md`
 
 ## Queue Storage
 
-The queue is stored globally at `~/.claude/article-queue.md` (user's home directory).
+**Two queue locations are supported:**
+- **Global** (default): `~/.claude/article-queue.md` - shared across all projects
+- **Local**: `.claude/article-queue.md` - project-specific queue
 
 **Queue File Format:**
 ```markdown
@@ -35,18 +42,23 @@ Items marked with `[x]` have already been generated.
 
 ## Execution Workflow
 
-### Step 1: Read Queue File
+### Step 1: Determine Queue Location
 
-1. Use Read tool to check if `~/.claude/article-queue.md` exists (expand `~` to actual home path)
+1. Check for `-l` flag → use local queue (`.claude/article-queue.md`)
+2. Check for `-g` flag or no flag → use global queue (`~/.claude/article-queue.md`)
+
+### Step 2: Read Queue File
+
+1. Use Read tool to check if the queue file exists (expand `~` to actual home path for global)
 2. If it doesn't exist, inform the user the queue is empty and suggest using `/article-add`
 
-### Step 2: Parse Queue Contents
+### Step 3: Parse Queue Contents
 
 Extract all topics from the file:
 - `- [ ]` items are pending (not yet generated)
 - `- [x]` items are completed (already generated)
 
-### Step 3: Display Queue
+### Step 4: Display Queue
 
 Present the queue to the user in a clear format:
 
@@ -64,7 +76,7 @@ Present the queue to the user in a clear format:
 Use `/article <topic>` to generate any article, or select one below.
 ```
 
-### Step 4: Offer Selection (if pending topics exist)
+### Step 5: Offer Selection (if pending topics exist)
 
 If there are pending topics, use **AskUserQuestion** to let the user pick one:
 
@@ -78,7 +90,7 @@ If there are pending topics, use **AskUserQuestion** to let the user pick one:
 
 If there are more than 3 pending topics, show the first 3 and include "Not now" as the 4th option. The user can always invoke `/article` directly for other topics.
 
-### Step 5: Handle Selection
+### Step 6: Handle Selection
 
 **If user selects a topic:**
 1. Mark the topic as in-progress in the queue (optional visual feedback)
@@ -95,9 +107,15 @@ If there are more than 3 pending topics, show the first 3 and include "Not now" 
 ```
 User: /article-queue
 
-Claude: Your article queue is empty.
+Claude: Your global article queue is empty.
 
 Use `/article-add <topic>` to add topics you'd like to write articles about later.
+
+User: /article-queue -l
+
+Claude: Your local article queue is empty.
+
+Use `/article-add -l <topic>` to add project-specific topics.
 ```
 
 ### Queue with Topics
