@@ -1,7 +1,7 @@
 ---
-name: Article
+name: article
 description: This skill should be used when the user asks to "write an article", "create an article", "explain this topic", or invokes "/article <subject>". Generates self-contained HTML articles with inline SVG diagrams, proper structure, and polished styling. Handles plain text subjects, file paths (.md, .txt), and URLs as input.
-version: 1.0.0
+version: 1.1.0
 ---
 
 # Article - HTML Article Generator
@@ -106,12 +106,14 @@ Use these sections in this exact order:
 Include these pedagogical elements:
 
 - **"By the end of this article you will..."** learning outcomes near the top
-- **Sticky table of contents** with anchor links
+- **Collapsible inline TOC** using `<details>` element near the top of the article
 - **Simple mental model first**, then progressively deeper detail
 - **"Stop and check" moments** - questions before revealing answers
 - **Callout boxes** for important notes and warnings
 - **Comparison tables** when discussing tradeoffs or approaches
 - **Rules of thumb** made explicit when applicable
+
+**Important**: Do NOT use floating/sticky sidebar TOCs. They complicate responsive layout and cause centering issues. Use an inline collapsible TOC instead.
 
 ### Diagram Requirements
 
@@ -127,22 +129,116 @@ Each diagram must have:
 - A caption explaining what to notice
 - `aria-label` for accessibility
 
+**Diagram Sizing (Critical)**:
+- Wrap each SVG in a container `<div class="diagram">` with padding and background
+- **Constrain height**: Apply `max-height: 280-380px` to prevent diagrams from becoming enormous
+- Use `max-width: 100%` but never let diagrams expand unbounded vertically
+- Diagrams should fit comfortably on screen without scrolling
+
+Example CSS for diagrams:
+```css
+.diagram {
+    background: var(--paper-warm);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.5rem;
+    overflow-x: auto;
+}
+
+.diagram svg {
+    display: block;
+    margin: 0 auto;
+    max-width: 100%;
+    height: auto;
+    max-height: 350px;
+}
+```
+
+### Layout Requirements
+
+**Container Layout (Critical)**:
+```css
+.container {
+    width: 90%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 3rem 0;
+}
+```
+
+- Use **90% viewport width** for the main container, centered with `margin: 0 auto`
+- Set **max-width: 1400px** to prevent excessive line length on ultra-wide screens
+- **Never use margin offsets** for floating elements - keep layout simple and centered
+- Scale to 92% width on mobile with `@media (max-width: 768px)`
+
 ### Styling Requirements
 
 All styles inline in a `<style>` tag:
 
-- **Light and dark themes** using `prefers-color-scheme`
-- **Max-width content column** (readable line length)
-- **Sticky mini-TOC** on right side for wide screens
-- **Collapsible TOC** on narrow screens (responsive)
-- **Modern typography** with generous spacing
+**Theme Toggle (Required)**:
+- Include a theme toggle button in the header that allows users to switch between light and dark modes
+- Default to system preference using `prefers-color-scheme`, but allow manual override
+- Store preference in localStorage so it persists across page reloads
+- Use a simple toggle button with sun/moon icons or "Light/Dark" text
+
+Example theme toggle implementation:
+```html
+<button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+    <span class="light-icon">☀️</span>
+    <span class="dark-icon">🌙</span>
+</button>
+
+<script>
+function toggleTheme() {
+    const html = document.documentElement;
+    const current = html.getAttribute('data-theme');
+    const next = current === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', next);
+    localStorage.setItem('theme', next);
+}
+
+// Initialize theme
+(function() {
+    const saved = localStorage.getItem('theme');
+    const preferred = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', saved || preferred);
+})();
+</script>
+```
+
+Use `[data-theme="dark"]` and `[data-theme="light"]` selectors instead of `@media (prefers-color-scheme: ...)` when implementing the toggle.
+
+**Color Palette**:
+- Avoid generic blue/purple schemes (#228be6, etc.) - these look like "AI slop"
+- Use warmer, more refined palettes:
+  - Warm paper tones for backgrounds (e.g., `#fdfcfa`, `#f7f5f0`)
+  - Muted accent colors (e.g., teal `#2d6a6a`, terracotta `#c45d3a`, gold `#9a7b4f`)
+- Define semantic color variables: `--ink`, `--paper`, `--accent` (not `--primary`, `--secondary`)
+
+**Typography**:
+- Use Google Fonts for distinctive typography - the `<link>` tag is acceptable for fonts
+- Recommended combinations:
+  - Headers: Fraunces, Playfair Display, or another distinctive serif
+  - Body: Outfit, Source Sans 3, or another clean sans-serif
+  - Code: JetBrains Mono, Fira Code, or Source Code Pro
+- Apply proper font weights and letter-spacing for refinement
+- Use `clamp()` for responsive font sizes on headings
+
+Example font imports:
+```html
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Outfit:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+```
+
+**Other Styling**:
+- **Collapsible TOC** near the top using `<details>` element
+- **Modern typography** with generous spacing (line-height: 1.7)
 - **Sufficient contrast** for accessibility
-- **Code blocks** styled with syntax-friendly formatting
+- **Code blocks** styled with syntax-friendly formatting, rounded corners, and subtle borders
 
 ### Technical Requirements
 
-- **Self-contained**: No external images, fonts, or scripts
-- **Offline viewable**: Everything inline
+- **Mostly self-contained**: Google Fonts `<link>` tags are acceptable; no other external dependencies
+- **Offline viewable**: Everything else inline (styles, scripts, SVGs)
 - **Semantic HTML**: Proper heading hierarchy, sections, figures
 - **Accessible**: Alt text equivalents, keyboard navigable, readable fonts
 
@@ -168,6 +264,56 @@ The output must:
 - Start with `<!DOCTYPE html>`
 - End with `</html>`
 - Be immediately saveable and viewable in a browser
+
+## CSS Reference Template
+
+Use this as a starting point for article styling:
+
+```css
+:root {
+    --ink: #1a1a1a;
+    --ink-light: #4a4a4a;
+    --ink-muted: #767676;
+    --paper: #fdfcfa;
+    --paper-warm: #f7f5f0;
+    --accent: #c45d3a;
+    --accent-light: #fef6f3;
+    --teal: #2d6a6a;
+    --teal-light: #e8f4f4;
+    --gold: #9a7b4f;
+    --gold-light: #faf6ef;
+    --border: #e5e2dc;
+}
+
+[data-theme="dark"] {
+    --ink: #e8e6e1;
+    --ink-light: #b8b5ad;
+    --ink-muted: #8a877f;
+    --paper: #141413;
+    --paper-warm: #1c1b19;
+    --accent: #e07a58;
+    --accent-light: #2a1f1a;
+    --teal: #5aa3a3;
+    --teal-light: #1a2626;
+    --gold: #c9a66b;
+    --gold-light: #1f1c16;
+    --border: #2e2d2a;
+}
+
+.container {
+    width: 90%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 3rem 0;
+}
+
+.diagram svg {
+    display: block;
+    margin: 0 auto;
+    max-width: 100%;
+    max-height: 350px;
+}
+```
 
 ## Example Usage
 
@@ -226,4 +372,20 @@ Claude: [Fetches the React documentation page]
 **Flags:**
 - `--oneshot` - Skip clarifying questions, use defaults
 
-**Output:** Single self-contained HTML file viewable in any browser offline.
+**Output:** Single HTML file with Google Fonts, viewable in any browser.
+
+## Common Mistakes to Avoid
+
+| Mistake | Why It Happens | Correct Approach |
+|---------|---------------|------------------|
+| Floating sidebar TOC | Trying to maximize screen use | Use inline collapsible TOC with `<details>` |
+| Fixed narrow width (800px) | "Readable line length" misinterpreted | Use `width: 90%; max-width: 1400px` |
+| Unbounded diagram height | No explicit sizing | Add `max-height: 280-380px` to SVGs |
+| Generic blue color scheme | Default AI aesthetic | Use warm, refined palettes |
+| System fonts only | "Self-contained" taken too literally | Google Fonts `<link>` is acceptable |
+| No theme toggle | Relying only on system preference | Add button for manual light/dark switching |
+
+## Related Skills
+
+- `/article-add <topic>` - Add a topic to your article queue for later generation
+- `/article-queue` - View queued topics and select one to generate
