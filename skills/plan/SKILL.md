@@ -66,6 +66,7 @@ Unresolved questions that may affect implementation.
 - Include setup/infrastructure tasks at start
 - Include validation/testing tasks throughout
 - Status values: `pending` | `in-progress` | `blocked` | `done`
+- **Checkbox rule**: Only use `[ ]` checkboxes for actionable tasks that a developer or agent can complete. Never use checkboxes for questions, decisions, open items, or anything that cannot be accomplished by an agent executing code/commands.
 
 Open in Typora: `open -a Typora PLAN.md`
 
