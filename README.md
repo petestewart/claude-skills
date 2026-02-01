@@ -270,7 +270,7 @@ To update the skills, pull the latest changes and re-run the install script:
 ```bash
 cd claude-skills
 git pull
-./install.sh
+`./install.sh`
 ```
 
 ## Uninstalling
