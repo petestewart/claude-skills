@@ -87,6 +87,19 @@ Opens markdown content in Typora for enhanced viewing and editing. Useful for vi
 
 **Note:** The skill will automatically skip if you say "don't open in Typora", "skip Typora", "no Typora", or "terminal only".
 
+### 7. Ralph Script (`/ralph-script`)
+
+Bootstraps the Ralph Wiggum autonomous loop into your project by creating `ralph-loop.sh` and `prompt.md`. The loop drives Claude through a `PLAN.md` task list unattended, with colored output and context usage tracking.
+
+**When to use:**
+- When you say "add ralph loop", "set up ralph script", or "add autonomous loop"
+- When bootstrapping autonomous execution for a planned project
+- Supports `--force` to skip interactive checks
+
+### 8. Explain Project (`/explain-project`)
+
+Generates a detailed FOR[name].md document that explains the entire project in plain language.
+
 ## Commands Included
 
 ### `/review-pr <number>`
@@ -134,6 +147,7 @@ cp -r skills/subagent ~/.claude/skills/
 cp -r skills/qa ~/.claude/skills/
 cp -r skills/article ~/.claude/skills/
 cp -r skills/typora-markdown ~/.claude/skills/
+cp -r skills/ralph-script ~/.claude/skills/
 
 # Copy each command
 cp commands/*.md ~/.claude/commands/
@@ -149,6 +163,7 @@ After installation, restart Claude Code and verify the skills are loaded:
 /qa
 /article
 /typora-markdown
+/ralph-script
 /review-pr
 /pr-description
 /analyze-pr-feedback
@@ -250,10 +265,15 @@ claude-skills/
     ├── subagent/
     │   ├── SKILL.md
     │   └── ... (reference files)
-    └── typora-markdown/
+    ├── typora-markdown/
+    │   ├── SKILL.md
+    │   └── scripts/
+    │       └── open-in-typora.sh
+    └── ralph-script/
         ├── SKILL.md
-        └── scripts/
-            └── open-in-typora.sh
+        └── assets/
+            ├── ralph-loop.sh
+            └── prompt.md
 ```
 
 ## Requirements
@@ -285,6 +305,7 @@ rm -rf ~/.claude/skills/subagent
 rm -rf ~/.claude/skills/qa
 rm -rf ~/.claude/skills/article
 rm -rf ~/.claude/skills/typora-markdown
+rm -rf ~/.claude/skills/ralph-script
 
 # Remove commands
 rm -f ~/.claude/commands/analyze-pr-feedback.md

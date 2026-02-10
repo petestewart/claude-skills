@@ -35,7 +35,7 @@ if [ ! -d "$SKILLS_DEST" ]; then
 fi
 
 # Skills to install
-SKILLS=("project-planner" "orchestrator" "subagent" "qa" "typora-markdown" "article" "article-add" "article-queue" "review-as" "problem-statement" "prd" "specs" "plan")
+SKILLS=("project-planner" "orchestrator" "subagent" "qa" "typora-markdown" "article" "article-add" "article-queue" "review-as" "problem-statement" "prd" "specs" "plan" "ralph-script")
 
 # Install each skill
 for skill in "${SKILLS[@]}"; do
@@ -116,3 +116,4 @@ echo "  /problem-statement        - Create PROBLEM.md from Jira ticket or descri
 echo "  /prd                      - Expand PROBLEM.md into full PRD.md"
 echo "  /specs                    - Create technical specifications from PRD.md"
 echo "  /plan                     - Create implementation plan from specs"
+echo "  /ralph-script             - Add Ralph Wiggum autonomous loop to project"
