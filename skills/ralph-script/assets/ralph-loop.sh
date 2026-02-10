@@ -20,7 +20,7 @@ while grep -q '\- \[ \]' "$PLAN_FILE"; do
       --include-partial-messages \
       --verbose \
       --dangerously-skip-permissions \
-      | jq -rj --argjson max_tokens "$MAX_TOKENS" --argjson dumb_zone "$DUMB_ZONE_TOKENS" --argjson danger_zone "$DANGER_ZONE_TOKENS" '
+      | jq --unbuffered -rj --argjson max_tokens "$MAX_TOKENS" --argjson dumb_zone "$DUMB_ZONE_TOKENS" --argjson danger_zone "$DANGER_ZONE_TOKENS" '
         if .type == "stream_event" then
           if .event.type == "content_block_start" and .event.content_block.type == "text" then
             "\u001b[97m🤖 "
