@@ -57,7 +57,7 @@ for skill in "${SKILLS[@]}"; do
 done
 
 # Commands to install
-COMMANDS=("analyze-pr-feedback.md" "planterview.md" "pr-description.md" "review-pr.md")
+COMMANDS=("analyze-pr-feedback.md" "excalidraw.md" "planterview.md" "pr-description.md" "review-pr.md")
 
 # Create commands destination directory if it doesn't exist
 if [ ! -d "$COMMANDS_DEST" ]; then
@@ -111,6 +111,7 @@ echo "  /planterview [file]   - Interview to refine a spec (default: SPEC.md)"
 echo "  /review-pr <number>   - Analyze a PR with suggested review order"
 echo "  /pr-description       - Generate a PR description from branch/Jira"
 echo "  /analyze-pr-feedback  - Analyze PR reviews and comments"
+echo "  /excalidraw <description> - Generate Excalidraw diagram in Chrome"
 echo "  /review-as <name> <target> - Review PR/branch using a reviewer's standards"
 echo "  /problem-statement        - Create PROBLEM.md from Jira ticket or description"
 echo "  /prd                      - Expand PROBLEM.md into full PRD.md"

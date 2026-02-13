@@ -102,6 +102,19 @@ Generates a detailed FOR[name].md document that explains the entire project in p
 
 ## Commands Included
 
+### `/excalidraw <description>`
+
+Generates an Excalidraw diagram from a text description and renders it in Chrome. Uses the Claude in Chrome extension to inject the diagram into excalidraw.com via localStorage.
+
+**Requires:** Claude in Chrome browser extension
+
+**Examples:**
+```
+/excalidraw simple flowchart with start, process, end
+/excalidraw architecture diagram showing frontend, API, and database layers
+/excalidraw decision tree for user authentication flow
+```
+
 ### `/review-pr <number>`
 
 Analyzes a GitHub PR and provides a high-level explanation with suggested file review order and Mermaid diagrams showing relationships.
@@ -248,6 +261,7 @@ claude-skills/
 ├── install.sh             # Installation script
 ├── commands/
 │   ├── analyze-pr-feedback.md
+│   ├── excalidraw.md
 │   ├── planterview.md
 │   ├── pr-description.md
 │   └── review-pr.md
