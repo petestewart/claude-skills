@@ -1,6 +1,6 @@
 study PLAN.md
 
-pick the most important next task to do. your task is to implement this fix and validate that this functionality works.
+pick the first unchecked task (- [ ]) in the list. your task is to implement it and validate that it works.
 
 IMPORTANT:
 - after making changes to the files, run the tests
