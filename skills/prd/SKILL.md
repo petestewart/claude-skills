@@ -1,50 +1,48 @@
 ---
 name: prd
-description: Expand a problem statement into a Product Requirements Document (PRD). Use when the user has a PROBLEM.md and wants to create a fuller PRD.md with technical approach, dependencies, affected systems, and open questions. Also use when the user says "/prd", "create a PRD", "expand to PRD", or "product requirements document".
+description: Expand a problem description into a Product Requirements Document (PRD). Use when the user says "/prd", "create a PRD", "expand to PRD", or "product requirements document". Accepts an inline description, a file path, or reads from PROBLEM.md. Example: "/prd add role-based access control to the admin panel".
 ---
 
 # PRD (Product Requirements Document)
 
-Expand a problem statement into a comprehensive PRD that bridges problem definition with implementation planning.
+Expand a problem description into a comprehensive PRD that bridges problem definition with implementation planning. Works from whatever context is available — an inline description, a referenced file, PROBLEM.md, or any combination.
 
 ## Workflow
 
-### 1. Check for PROBLEM.md
+### 1. Gather Context
 
-Look for `PROBLEM.md` in the project root.
+Determine the input sources. Multiple sources can be combined.
 
-**If found**: Read it and use as the foundation for the PRD.
+**A) User-provided description**: Check if the user provided arguments with the command (e.g., `/prd add role-based access control`). If so, this is the primary problem description.
 
-**If not found**: Ask the user:
-> "No PROBLEM.md found. Would you like me to:
-> 1. **Create one first** - Run `/problem-statement` to define the problem clearly
-> 2. **Proceed without it** - I'll ask you to describe the problem directly"
+**B) Referenced file**: If the user points to a specific file (e.g., `/prd from notes.md`), read that file as the problem description.
 
-If proceeding without PROBLEM.md, gather:
-- What problem are we solving?
-- Who is affected?
-- What does success look like?
+**C) PROBLEM.md**: Look for `PROBLEM.md` in the project root. If found, read it as supplementary context.
 
-### 2. Gather Scope Information
+**If no description, no file, AND no PROBLEM.md exists**: Ask the user to describe the problem. Do not suggest running other skills — just ask directly:
+> "What problem are you trying to solve? Describe it and I'll create a PRD."
 
-Ask the user:
+### 2. Gather Scope Information (interactive only)
+
+**If running interactively**, ask:
 > "What systems or repositories does this work touch?"
 
 Also ask if not already clear from context:
 - Are there existing patterns or approaches we should follow?
-- Who are the stakeholders or reviewers?
 - Any hard constraints (timeline, technology, dependencies)?
+
+**If running headless**, infer scope from the description and codebase exploration. Do not prompt.
 
 ### 3. Generate PRD.md
 
 Create `PRD.md` at project root using this structure:
 
 ```markdown
-# PRD: [Title from Problem Statement]
+# PRD: [Title]
 
 ## Problem Statement
 
-[Copy or summarize from PROBLEM.md - Problem, Context, Desired Outcome, Success Criteria]
+[Summarize the problem — from PROBLEM.md, the user's description, or the referenced file]
 
 ## Proposed Solution
 
@@ -64,7 +62,7 @@ Important choices and their rationale. Include alternatives considered if releva
 External systems, services, or teams this work depends on.
 
 ### Out of Scope
-[Carry forward from PROBLEM.md, expand if needed]
+What this work intentionally does not cover.
 
 ## Risks & Open Questions
 
@@ -78,21 +76,17 @@ External systems, services, or teams this work depends on.
 
 ## Success Criteria
 
-[Carry forward from PROBLEM.md]
+How we know this work is done and successful.
 
 ---
-*Generated from PROBLEM.md on [date]*
+*Generated on [date]*
 ```
 
-### 4. Open in Typora
+Open in Typora: `open -a Typora PRD.md`
 
-```bash
-open -a Typora PRD.md
-```
+### 4. Offer Review (interactive only)
 
-### 5. Offer Review
-
-After opening:
+**If running interactively**, ask:
 > "I've created PRD.md. Would you like me to:
 > 1. **Review for gaps** - Check for missing technical details, unclear scope, or unaddressed risks
 > 2. **Done** - Proceed with the PRD as-is"
@@ -103,7 +97,6 @@ If review requested, spawn a subagent using the Task tool with `subagent_type: "
 Prompt: "Review PRD.md against the actual codebase. Check:
 - Does the technical approach align with existing patterns?
 - Are affected systems complete? Search for implicit dependencies.
-- Do the APIs/endpoints mentioned actually exist? Verify response shapes.
 - Are there existing implementations we should reference or follow?
 - Are there vague areas that could cause scope creep?
 - Are risks adequately identified?
@@ -111,17 +104,15 @@ Prompt: "Review PRD.md against the actual codebase. Check:
 Return structured findings: 🔴 Critical gaps, 🟡 Missing details, 🟢 Confirmed details."
 ```
 
-After the subagent returns, present findings and offer options:
-1. Update PRD with findings
-2. Leave as-is for discussion
+Present findings. Ask user what to update. Make requested changes.
 
-If user requests updates and needs clarification (e.g., exploring existing patterns), spawn additional Explore agents as needed.
+**If running headless**, skip the review prompt and proceed directly.
 
-### 6. Offer Next Steps
+### 5. Next Steps (interactive only)
 
-After review is complete (or if user chose "Done"):
-
+**If running interactively**, ask:
 > "PRD is ready. Would you like me to:
->
 > 1. **Create technical specs** - Run `/specs` to create detailed specifications
 > 2. **Done** - Proceed with the PRD as-is"
+
+**If running headless**, stop after creating PRD.md.
