@@ -35,7 +35,7 @@ if [ ! -d "$SKILLS_DEST" ]; then
 fi
 
 # Skills to install
-SKILLS=("project-planner" "orchestrator" "subagent" "qa" "typora-markdown" "article" "article-add" "article-queue" "review-as" "problem-statement" "prd" "specs" "plan" "ralph-script")
+SKILLS=("project-planner" "orchestrator" "subagent" "qa" "typora-markdown" "article" "article-add" "article-queue" "review-as" "problem-statement" "prd" "specs" "plan" "ralph-script" "explain-project" "ship" "test-review")
 
 # Install each skill
 for skill in "${SKILLS[@]}"; do
@@ -102,19 +102,24 @@ echo ""
 echo "Restart Claude Code to load the new skills and commands."
 echo ""
 echo "Usage:"
-echo "  /project-planner      - Create a PLAN.md for a new project"
-echo "  /orchestrator         - Execute the plan with subagent coordination"
-echo "  /qa                   - Create and execute QA test plans"
-echo "  /typora-markdown      - Open markdown content in Typora for viewing"
-echo "  /article <subject>    - Generate HTML article from topic, file, or URL"
-echo "  /planterview [file]   - Interview to refine a spec (default: SPEC.md)"
-echo "  /review-pr <number>   - Analyze a PR with suggested review order"
-echo "  /pr-description       - Generate a PR description from branch/Jira"
-echo "  /analyze-pr-feedback  - Analyze PR reviews and comments"
-echo "  /excalidraw <description> - Generate Excalidraw diagram in Chrome"
-echo "  /review-as <name> <target> - Review PR/branch using a reviewer's standards"
 echo "  /problem-statement        - Create PROBLEM.md from Jira ticket or description"
 echo "  /prd                      - Expand PROBLEM.md into full PRD.md"
 echo "  /specs                    - Create technical specifications from PRD.md"
 echo "  /plan                     - Create implementation plan from specs"
+echo "  /project-planner          - Create a PLAN.md via interactive planning"
+echo "  /orchestrator             - Execute the plan with subagent coordination"
+echo "  /qa                       - Create and execute QA test plans"
+echo "  /article <subject>        - Generate HTML article from topic, file, or URL"
+echo "  /article-add <topic>      - Add a topic to the article queue"
+echo "  /article-queue            - View and manage the article queue"
+echo "  /ship                     - Push branch and create a GitHub PR"
+echo "  /review-as <name> <target> - Review PR/branch using a reviewer's standards"
+echo "  /test-review [path]       - Review unit tests for quality and patterns"
+echo "  /explain-project [name]   - Generate a project explainer document"
+echo "  /typora-markdown          - Open markdown content in Typora for viewing"
 echo "  /ralph-script             - Add Ralph Wiggum autonomous loop to project"
+echo "  /review-pr <number>       - Analyze a PR with suggested review order"
+echo "  /pr-description           - Generate a PR description from branch/Jira"
+echo "  /analyze-pr-feedback      - Analyze PR reviews and comments"
+echo "  /planterview [file]       - Interview to refine a spec (default: SPEC.md)"
+echo "  /excalidraw <description> - Generate Excalidraw diagram in Chrome"

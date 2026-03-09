@@ -1,19 +1,59 @@
 # Claude Code Skills
 
-A collection of custom skills and commands for Claude Code, including project planning, orchestration tools, article generation, and utilities for PR workflows and markdown viewing.
+A collection of custom skills and commands for Claude Code, including project planning pipelines, orchestration tools, article generation, code review utilities, and PR workflows.
 
 ## Skills Included
 
-### 1. Project Planner (`/project-planner`)
+### Planning & Execution Pipeline
 
-Generates a comprehensive `PLAN.md` file at the start of any new project. This plan serves as the single source of truth that an Orchestrator agent (or human) can use to drive the entire build.
+These skills form a progressive refinement pipeline: define the problem, expand into requirements, create specs, plan tasks, then execute.
+
+#### Problem Statement (`/problem-statement`)
+
+Creates a structured `PROBLEM.md` document that clearly defines what problem is being solved and what success looks like. Accepts input from Jira tickets (via MCP), document links, or text descriptions.
 
 **When to use:**
-- Starting a new project from scratch
-- When you say "plan this project", "create a plan", or "help me scope this"
+- Starting a new project, feature, or bugfix
+- When you need to clearly define the problem before jumping into solutions
+- When you say "define the problem", "what are we solving", or "create a problem statement"
+
+#### PRD (`/prd`)
+
+Expands a problem statement into a comprehensive Product Requirements Document (`PRD.md`). Bridges problem definition with implementation planning by adding technical approach, dependencies, affected systems, and open questions.
+
+**When to use:**
+- After creating a `PROBLEM.md`
+- When you say "create a PRD", "expand to PRD", or "product requirements"
+- Will prompt to create `PROBLEM.md` first if one doesn't exist
+
+#### Specs (`/specs`)
+
+Transforms `PRD.md` into detailed technical specifications in a `specs/` directory. Creates a `specs/README.md` overview and individual spec files for each component.
+
+**When to use:**
+- After creating a `PRD.md`
+- When you say "create specs", "technical specifications", or "spec it out"
+- When you need detailed implementation blueprints before coding
+
+#### Plan (`/plan`)
+
+Creates an actionable `PLAN.md` with phased tasks from whatever context is available — a user-provided description, `PRD.md`, `specs/`, or any combination. Unlike Project Planner, this skill is flexible about input sources.
+
+**When to use:**
+- When you say "create a plan", "implementation plan", or "task breakdown"
+- Accepts inline descriptions: `/plan add dark mode to settings`
+- Works with or without PRD/specs — adapts to available context
+
+#### Project Planner (`/project-planner`)
+
+Generates a comprehensive `PLAN.md` file at the start of any new project through an interactive session. This plan serves as the single source of truth that an Orchestrator agent (or human) can use to drive the entire build.
+
+**When to use:**
+- Starting a new project from scratch with interactive planning
+- When you say "plan this project", "help me scope this"
 - When a project needs structured planning before implementation
 
-### 2. Orchestrator (`/orchestrator`)
+#### Orchestrator (`/orchestrator`)
 
 Manages project execution by:
 - Reading and maintaining `PLAN.md` as the source of truth
@@ -26,7 +66,7 @@ Manages project execution by:
 - When you say "start building", "orchestrate this project", "run the plan"
 - When resuming work on a planned project
 
-### 3. Subagent (`/subagent`)
+#### Subagent (`/subagent`)
 
 A focused implementation agent that:
 - Executes a single ticket from the plan
@@ -38,7 +78,7 @@ A focused implementation agent that:
 - Automatically spawned by the Orchestrator via the Task tool
 - Should not be invoked directly by users
 
-### 4. QA (`/qa`)
+#### QA (`/qa`)
 
 Quality assurance testing skill that:
 - Creates thorough test plans (`docs/qa/<scope>/TEST_PLAN.md`)
@@ -52,7 +92,9 @@ Quality assurance testing skill that:
 - After completing implementation work that needs validation
 - When you want to systematically test new functionality
 
-### 5. Article (`/article <subject>`)
+### Article Generation
+
+#### Article (`/article <subject>`)
 
 Generates self-contained HTML articles with inline SVG diagrams, light/dark themes, and polished styling that can be viewed offline in any browser.
 
@@ -74,7 +116,91 @@ Generates self-contained HTML articles with inline SVG diagrams, light/dark them
 /article https://example.com/guide --oneshot
 ```
 
-### 6. Typora Markdown (`/typora-markdown`)
+#### Article Add (`/article-add <topic>`)
+
+Adds a topic to the article queue for later generation. Supports both global and project-local queues.
+
+**Flags:**
+- `-g` - Use global queue (default): `~/.claude/article-queue.md`
+- `-l` - Use local/project queue: `.claude/article-queue.md`
+
+**Examples:**
+```
+/article-add how kubernetes networking works
+/article-add -l project-specific architecture notes
+```
+
+#### Article Queue (`/article-queue`)
+
+Displays the article topic queue and offers to generate an article from any queued topic.
+
+**Flags:**
+- `-g` - Use global queue (default)
+- `-l` - Use local/project queue
+
+**When to use:**
+- When you say "show my article queue", "what articles are queued", or "list article topics"
+
+### Code Review & PRs
+
+#### Ship (`/ship`)
+
+Pushes the current branch, creates a GitHub PR with a generated title and description, and optionally assigns reviewers and notifies via Slack.
+
+**Features:**
+- Auto-detects Jira ticket numbers from branch names for PR titles
+- Generates structured PR descriptions from the diff
+- Optionally assigns reviewers and sends Slack notifications
+
+**When to use:**
+- When you say "ship it", "create a PR", "open a PR"
+- When you're ready to push and open a pull request
+
+#### Review As (`/review-as <reviewer> <target>`)
+
+Reviews a PR or branch using a specific reviewer's documented technical preferences and code standards. Requires reviewer preference files in a `reviewers/` directory.
+
+**Where target can be:**
+- PR number (e.g., `4698`)
+- PR URL
+- Branch name (reviews diff against main/master)
+- `HEAD` or omitted (reviews current uncommitted changes)
+
+**Examples:**
+```
+/review-as tt 4698
+/review-as tt feature-branch
+/review-as tt HEAD
+```
+
+#### Test Review (`/test-review [path]`)
+
+Reviews unit tests for quality, coverage, consistency, and adherence to established codebase patterns. Optionally targets a specific directory or file.
+
+**Examples:**
+```
+/test-review                           # Review all tests
+/test-review spec/                     # Review Ruby specs
+/test-review tests/unit/               # Review specific directory
+/test-review src/__tests__/auth.test.ts  # Review specific file
+```
+
+### Utilities
+
+#### Explain Project (`/explain-project`)
+
+Generates a detailed `FOR[name].md` document that explains an entire project in plain language. Covers technical architecture, codebase structure, technology choices, and lessons learned. Written in a conversational, memorable style with analogies and anecdotes.
+
+**Features:**
+- Accepts an optional name argument (e.g., `/explain-project Sarah`)
+- Investigates the project by spawning parallel research agents
+- Opens the finished document in Typora
+
+**When to use:**
+- When you say "explain this project", "write a project explainer", or "help me understand this codebase"
+- When onboarding someone new to a project
+
+#### Typora Markdown (`/typora-markdown`)
 
 Opens markdown content in Typora for enhanced viewing and editing. Useful for viewing plans, PR reviews, analysis reports, or any substantial markdown content.
 
@@ -87,7 +213,7 @@ Opens markdown content in Typora for enhanced viewing and editing. Useful for vi
 
 **Note:** The skill will automatically skip if you say "don't open in Typora", "skip Typora", "no Typora", or "terminal only".
 
-### 7. Ralph Script (`/ralph-script`)
+#### Ralph Script (`/ralph-script`)
 
 Bootstraps the Ralph Wiggum autonomous loop into your project by creating `ralph-loop.sh` and `prompt.md`. The loop drives Claude through a `PLAN.md` task list unattended, with colored output and context usage tracking.
 
@@ -95,10 +221,6 @@ Bootstraps the Ralph Wiggum autonomous loop into your project by creating `ralph
 - When you say "add ralph loop", "set up ralph script", or "add autonomous loop"
 - When bootstrapping autonomous execution for a planned project
 - Supports `--force` to skip interactive checks
-
-### 8. Explain Project (`/explain-project`)
-
-Generates a detailed FOR[name].md document that explains the entire project in plain language.
 
 ## Commands Included
 
@@ -159,8 +281,18 @@ cp -r skills/orchestrator ~/.claude/skills/
 cp -r skills/subagent ~/.claude/skills/
 cp -r skills/qa ~/.claude/skills/
 cp -r skills/article ~/.claude/skills/
+cp -r skills/article-add ~/.claude/skills/
+cp -r skills/article-queue ~/.claude/skills/
 cp -r skills/typora-markdown ~/.claude/skills/
 cp -r skills/ralph-script ~/.claude/skills/
+cp -r skills/explain-project ~/.claude/skills/
+cp -r skills/plan ~/.claude/skills/
+cp -r skills/prd ~/.claude/skills/
+cp -r skills/specs ~/.claude/skills/
+cp -r skills/problem-statement ~/.claude/skills/
+cp -r skills/review-as ~/.claude/skills/
+cp -r skills/ship ~/.claude/skills/
+cp -r skills/test-review ~/.claude/skills/
 
 # Copy each command
 cp commands/*.md ~/.claude/commands/
@@ -175,41 +307,56 @@ After installation, restart Claude Code and verify the skills are loaded:
 /orchestrator
 /qa
 /article
+/article-add
+/article-queue
 /typora-markdown
 /ralph-script
+/explain-project
+/plan
+/prd
+/specs
+/problem-statement
+/review-as
+/ship
+/test-review
 /review-pr
 /pr-description
 /analyze-pr-feedback
 /planterview
+/excalidraw
 ```
 
 You should see the skills and commands listed in your available commands.
 
 ## Usage
 
-### Creating a Project Plan
+### Planning Pipeline
 
-1. Start a new Claude Code session in your project directory
-2. Invoke the planner:
-   ```
-   /project-planner
-   ```
-3. Provide the requested information (project name, goals, constraints)
-4. The skill will create a `PLAN.md` file in your repository root
+The recommended workflow for new projects follows a progressive refinement pipeline:
 
-### Running the Orchestrator
+```
+/problem-statement  →  Define the problem
+       |
+       v
+     /prd           →  Expand into requirements
+       |
+       v
+     /specs          →  Create technical specifications
+       |
+       v
+     /plan           →  Break into actionable tasks (PLAN.md)
+       |
+       v
+  /orchestrator      →  Execute the plan with subagents
+       |
+       v
+     /qa             →  Verify the implementation
+       |
+       v
+     /ship           →  Push and create a PR
+```
 
-1. Ensure you have a `PLAN.md` in your repository root
-2. Invoke the orchestrator:
-   ```
-   /orchestrator
-   ```
-3. The orchestrator will:
-   - Read and assess the current plan state
-   - Select the next ready ticket
-   - Spawn subagents to implement tickets
-   - Verify completed work
-   - Update the plan as work progresses
+You can enter the pipeline at any stage — `/plan` works with or without prior PRD/specs.
 
 ### Generating an Article
 
@@ -220,37 +367,10 @@ You should see the skills and commands listed in your available commands.
 2. Answer the clarifying questions about audience, depth, and focus
 3. The skill generates an HTML file you can open in your browser
 
-### Workflow Overview
-
+Or queue topics for later:
 ```
-User: "Plan my new project"
-      |
-      v
-Project Planner creates PLAN.md
-      |
-      v
-User: "Start building" or "/orchestrator"
-      |
-      v
-Orchestrator reads PLAN.md
-      |
-      v
-Orchestrator assigns ticket to Subagent
-      |
-      v
-Subagent implements and validates
-      |
-      v
-Subagent reports COMPLETE or BLOCKED
-      |
-      v
-Orchestrator verifies and marks Done
-      |
-      v
-User: "/qa" to verify implementation
-      |
-      v
-Repeat until project complete
+/article-add how DNS resolution works
+/article-queue
 ```
 
 ## File Structure
@@ -267,35 +387,31 @@ claude-skills/
 │   └── review-pr.md
 └── skills/
     ├── article/
-    │   └── SKILL.md
+    ├── article-add/
+    ├── article-queue/
+    ├── explain-project/
     ├── orchestrator/
-    │   ├── SKILL.md
-    │   └── ... (reference files)
+    ├── plan/
+    ├── prd/
+    ├── problem-statement/
     ├── project-planner/
-    │   ├── SKILL.md
-    │   └── PLAN_TEMPLATE.md
     ├── qa/
-    │   └── SKILL.md
+    ├── ralph-script/
+    ├── review-as/
+    ├── ship/
+    ├── specs/
     ├── subagent/
-    │   ├── SKILL.md
-    │   └── ... (reference files)
-    ├── typora-markdown/
-    │   ├── SKILL.md
-    │   └── scripts/
-    │       └── open-in-typora.sh
-    └── ralph-script/
-        ├── SKILL.md
-        └── assets/
-            ├── ralph-loop.sh
-            └── prompt.md
+    ├── test-review/
+    └── typora-markdown/
 ```
 
 ## Requirements
 
 - Claude Code CLI (version 2.0.20 or later)
 - Skills support enabled (default in recent versions)
-- Typora (optional, for `/typora-markdown` skill)
-- GitHub CLI (`gh`) for PR-related commands
+- Typora (optional, for `/typora-markdown` and `/explain-project` skills)
+- GitHub CLI (`gh`) for PR-related commands and `/ship`
+- Atlassian MCP (optional, for Jira integration in `/problem-statement` and `/ship`)
 
 ## Updating
 
@@ -304,7 +420,7 @@ To update the skills, pull the latest changes and re-run the install script:
 ```bash
 cd claude-skills
 git pull
-`./install.sh`
+./install.sh
 ```
 
 ## Uninstalling
@@ -318,11 +434,22 @@ rm -rf ~/.claude/skills/orchestrator
 rm -rf ~/.claude/skills/subagent
 rm -rf ~/.claude/skills/qa
 rm -rf ~/.claude/skills/article
+rm -rf ~/.claude/skills/article-add
+rm -rf ~/.claude/skills/article-queue
 rm -rf ~/.claude/skills/typora-markdown
 rm -rf ~/.claude/skills/ralph-script
+rm -rf ~/.claude/skills/explain-project
+rm -rf ~/.claude/skills/plan
+rm -rf ~/.claude/skills/prd
+rm -rf ~/.claude/skills/specs
+rm -rf ~/.claude/skills/problem-statement
+rm -rf ~/.claude/skills/review-as
+rm -rf ~/.claude/skills/ship
+rm -rf ~/.claude/skills/test-review
 
 # Remove commands
 rm -f ~/.claude/commands/analyze-pr-feedback.md
+rm -f ~/.claude/commands/excalidraw.md
 rm -f ~/.claude/commands/planterview.md
 rm -f ~/.claude/commands/pr-description.md
 rm -f ~/.claude/commands/review-pr.md
