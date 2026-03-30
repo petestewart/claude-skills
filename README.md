@@ -1,6 +1,6 @@
 # Claude Code Skills
 
-A collection of custom skills and commands for Claude Code, including project planning pipelines, orchestration tools, article generation, code review utilities, and PR workflows.
+A collection of custom skills and commands for Claude Code, including project planning pipelines, orchestration tools, article generation, code review utilities, PR workflows, and integration management.
 
 ## Skills Included
 
@@ -185,6 +185,32 @@ Reviews unit tests for quality, coverage, consistency, and adherence to establis
 /test-review src/__tests__/auth.test.ts  # Review specific file
 ```
 
+### Integrations
+
+#### Workato (`/workato`)
+
+Manages Workato automation recipes via the Developer API and Embedded OEM API. Supports diagnosing job failures, debugging recipes, scanning customer workspaces for code issues, and updating recipes with backup/restore safety.
+
+**Features:**
+- Diagnose failed jobs with step-level error inspection
+- Debug recipes by reading code, checking versions and connections
+- Scan all managed customer workspaces for recipe code patterns
+- Dry-run code fixes before applying with write access
+- Mandatory backup before any recipe updates (API has no version restore)
+
+**When to use:**
+- When you say "check workato errors", "debug recipe", "scan customer workspaces"
+- When investigating job failures or recipe issues
+- When auditing recipes across all customers for a known bug
+
+#### Standup (`/standup`)
+
+Generates standup updates from GitHub and Jira activity. Summarizes recent work for daily standups.
+
+**When to use:**
+- When you say "standup update", "what did I work on"
+- When you need to summarize recent activity for a standup
+
 ### Utilities
 
 #### Explain Project (`/explain-project`)
@@ -293,6 +319,8 @@ cp -r skills/problem-statement ~/.claude/skills/
 cp -r skills/review-as ~/.claude/skills/
 cp -r skills/ship ~/.claude/skills/
 cp -r skills/test-review ~/.claude/skills/
+cp -r skills/standup ~/.claude/skills/
+cp -r skills/workato ~/.claude/skills/
 
 # Copy each command
 cp commands/*.md ~/.claude/commands/
@@ -319,6 +347,8 @@ After installation, restart Claude Code and verify the skills are loaded:
 /review-as
 /ship
 /test-review
+/standup
+/workato
 /review-pr
 /pr-description
 /analyze-pr-feedback
@@ -400,9 +430,11 @@ claude-skills/
     ├── review-as/
     ├── ship/
     ├── specs/
+    ├── standup/
     ├── subagent/
     ├── test-review/
-    └── typora-markdown/
+    ├── typora-markdown/
+    └── workato/
 ```
 
 ## Requirements
@@ -446,6 +478,8 @@ rm -rf ~/.claude/skills/problem-statement
 rm -rf ~/.claude/skills/review-as
 rm -rf ~/.claude/skills/ship
 rm -rf ~/.claude/skills/test-review
+rm -rf ~/.claude/skills/standup
+rm -rf ~/.claude/skills/workato
 
 # Remove commands
 rm -f ~/.claude/commands/analyze-pr-feedback.md
