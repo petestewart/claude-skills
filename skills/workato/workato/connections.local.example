@@ -1,0 +1,18 @@
+# Workato API credentials.
+# Copy this file to connections.local and fill in real values.
+# NEVER commit connections.local — it contains credentials.
+#
+# To create an API token:
+#   Workspace admin > API clients > Create API client
+#   Assign a role with access to recipes, jobs, and connections
+#   Copy the bearer token (view-once — save it securely)
+#
+# Base URL by datacenter:
+#   US: https://www.workato.com/api
+#   EU: https://app.eu.workato.com/api
+#   JP: https://app.jp.workato.com/api
+#   SG: https://app.sg.workato.com/api
+#   AU: https://app.au.workato.com/api
+
+API_TOKEN=your-bearer-token-here
+BASE_URL=https://www.workato.com/api
