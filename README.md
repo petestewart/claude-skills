@@ -203,6 +203,21 @@ Manages Workato automation recipes via the Developer API and Embedded OEM API. S
 - When investigating job failures or recipe issues
 - When auditing recipes across all customers for a known bug
 
+#### Datadog Logs (`/datadog-logs`)
+
+Queries Datadog logs via the Logs Search API v2 for debugging and production investigation. Supports full Datadog query syntax, time ranges, pagination, and jq patterns for parsing results.
+
+**Features:**
+- Full Datadog search query syntax (field, tag, attribute, boolean, wildcard, range)
+- Relative and absolute time ranges
+- Cursor-based pagination for large result sets
+- Built-in jq patterns for summary views and error extraction
+
+**When to use:**
+- When you say "check the logs", "search Datadog", "find errors"
+- When investigating production issues or debugging failures
+- Requires `DD_API_KEY`, `DD_APP_KEY`, `DD_SITE` env vars in Claude settings
+
 #### Standup (`/standup`)
 
 Generates standup updates from GitHub and Jira activity. Summarizes recent work for daily standups.
@@ -321,6 +336,7 @@ cp -r skills/ship ~/.claude/skills/
 cp -r skills/test-review ~/.claude/skills/
 cp -r skills/standup ~/.claude/skills/
 cp -r skills/workato ~/.claude/skills/
+cp -r skills/datadog-logs ~/.claude/skills/
 
 # Copy each command
 cp commands/*.md ~/.claude/commands/
@@ -349,6 +365,7 @@ After installation, restart Claude Code and verify the skills are loaded:
 /test-review
 /standup
 /workato
+/datadog-logs
 /review-pr
 /pr-description
 /analyze-pr-feedback
@@ -430,6 +447,7 @@ claude-skills/
     ├── review-as/
     ├── ship/
     ├── specs/
+    ├── datadog-logs/
     ├── standup/
     ├── subagent/
     ├── test-review/
@@ -480,6 +498,7 @@ rm -rf ~/.claude/skills/ship
 rm -rf ~/.claude/skills/test-review
 rm -rf ~/.claude/skills/standup
 rm -rf ~/.claude/skills/workato
+rm -rf ~/.claude/skills/datadog-logs
 
 # Remove commands
 rm -f ~/.claude/commands/analyze-pr-feedback.md
