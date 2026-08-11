@@ -228,6 +228,15 @@ Generates standup updates from GitHub and Jira activity. Summarizes recent work 
 
 ### Utilities
 
+#### Dejargonize (`/dejargonize`)
+
+Runs Claude Code responses through a local `qwen3:8b` model before displaying them, replacing unnecessary jargon while preserving technical details, Markdown, code, URLs, paths, and Git hashes. Claude's original transcript remains unchanged.
+
+**Setup and usage:**
+- Run `/dejargonize install` after installing the skills repository. This requires [Ollama](https://ollama.com) and downloads the model when needed.
+- Use `/dejargonize status`, `on`, `off`, `model`, `prompt`, `context`, `capture`, `eval`, and `report` to manage it.
+- Run `/dejargonize uninstall` to remove the hook while preserving configuration and eval data.
+
 #### Explain Project (`/explain-project`)
 
 Generates a detailed `FOR[name].md` document that explains an entire project in plain language. Covers technical architecture, codebase structure, technology choices, and lessons learned. Written in a conversational, memorable style with analogies and anecdotes.
@@ -337,6 +346,7 @@ cp -r skills/test-review ~/.claude/skills/
 cp -r skills/standup ~/.claude/skills/
 cp -r skills/workato ~/.claude/skills/
 cp -r skills/datadog-logs ~/.claude/skills/
+cp -r skills/dejargonize ~/.claude/skills/
 
 # Copy each command
 cp commands/*.md ~/.claude/commands/
@@ -366,6 +376,7 @@ After installation, restart Claude Code and verify the skills are loaded:
 /standup
 /workato
 /datadog-logs
+/dejargonize install
 /review-pr
 /pr-description
 /analyze-pr-feedback

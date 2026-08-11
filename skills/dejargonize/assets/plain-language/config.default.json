@@ -1,0 +1,15 @@
+{
+  "enabled": true,
+  "capture": false,
+  "model": "qwen3:8b",
+  "promptVersion": "v3",
+  "intentAwarePrompts": ["v3"],
+  "ollamaUrl": "http://127.0.0.1:11434/api/chat",
+  "temperature": 0.2,
+  "minimumLength": 80,
+  "contextMode": "latest-user",
+  "intentContextCharacters": 6000,
+  "timeoutMs": 90000,
+  "contextTokens": 16384,
+  "keepAlive": "30m"
+}

@@ -35,7 +35,7 @@ if [ ! -d "$SKILLS_DEST" ]; then
 fi
 
 # Skills to install
-SKILLS=("project-planner" "orchestrator" "subagent" "qa" "typora-markdown" "article" "article-add" "article-queue" "review-as" "problem-statement" "prd" "specs" "plan" "ralph-script" "explain-project" "ship" "test-review" "standup" "workato" "datadog-logs" "fitness-plan")
+SKILLS=("project-planner" "orchestrator" "subagent" "qa" "typora-markdown" "article" "article-add" "article-queue" "review-as" "problem-statement" "prd" "specs" "plan" "ralph-script" "explain-project" "ship" "test-review" "standup" "workato" "datadog-logs" "fitness-plan" "dejargonize")
 
 # Install each skill
 for skill in "${SKILLS[@]}"; do
@@ -122,6 +122,7 @@ echo "  /standup                  - Generate standup update from GitHub/Jira act
 echo "  /workato                  - Manage Workato recipes, diagnose job failures"
 echo "  /datadog-logs             - Query Datadog logs for debugging and investigation"
 echo "  /fitness-plan             - Generate personalized fitness plan dashboard with video demos"
+echo "  /dejargonize install      - Install the local plain-language display hook"
 echo "  /review-pr <number>       - Analyze a PR with suggested review order"
 echo "  /pr-description           - Generate a PR description from branch/Jira"
 echo "  /analyze-pr-feedback      - Analyze PR reviews and comments"
