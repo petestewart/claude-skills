@@ -90,7 +90,7 @@ The output file is a local artifact. Never commit it.
 
 Always publish, every run. No flag, no asking.
 
-The local page cannot be published as-is: artifacts supply their own `<!doctype>`/`<head>`/`<body>` shell, and their CSP blocks every request to another host, which would break the dashboard integrations. `assets/artifactize.py` derives a copy that drops the wrapper tags, the chat anchor, and the chat panel, and leaves the viewed-sync code inert.
+The local page cannot be published as-is: artifacts supply their own `<!doctype>`/`<head>`/`<body>` shell, and their CSP blocks every request to another host, which would break the chat and viewed-sync integrations. `assets/artifactize.py` derives a copy that drops the wrapper tags, the chat anchor, and the chat panel, and leaves the viewed-sync code inert.
 
 It also drops the Potential Issues section and its TOC entry. That section is review material for the author, who has read it and decided what to act on before sharing; the shared copy is the explanation of the change, not a review of it. Keep writing the section as step 3.5 describes, since the local page still carries it.
 
@@ -129,9 +129,9 @@ If publishing fails, say so and carry on. The local page is still the deliverabl
 
 The generated page includes a self-contained "Ask about this change" panel (bottom-right) so the reader can ask follow-up questions about the PR, answered by a Claude session that has the diff in context. It is built into the template — no extra work beyond filling the anchor placeholders above. Behavior:
 
-- Talks to the local dashboard command-center server (`http://127.0.0.1:7799/action`), which resumes `EXPLAIN_ANCHOR.sessionId` when set or cold-starts a session from `repo` + `refRange` when not, and returns the session id so the page reuses it for later questions.
-- The server answers with a cheap model by default (Haiku, via `DIFF_QUESTION_MODEL` in `server.mjs`), since these are short questions over a diff already in context. Override per-server with the `DASHBOARD_DIFF_QUESTION_MODEL` env var.
-- The server normally runs already (launchd: `com.trunktools.dashboard-server`). If the panel reports it's offline, start it with `~/.claude/skills/dashboard/server-run.sh` (or `launchctl kickstart -k gui/$(id -u)/com.trunktools.dashboard-server`).
+- Talks to the skill's bundled local server (`http://127.0.0.1:17799/action`), which resumes `EXPLAIN_ANCHOR.sessionId` when set or cold-starts a session from `repo` + `refRange` when not, and returns the session id so the page reuses it for later questions.
+- The server answers with a cheap model by default (Haiku, via `DIFF_QUESTION_MODEL` in `skills/pr-walkthrough/server.mjs`), since these are short questions over a diff already in context. Override per-server with the `DASHBOARD_DIFF_QUESTION_MODEL` env var.
+- The server normally runs already (launchd: `com.trunktools.pr-walkthrough-server`), installed once. If the panel reports it's offline, start it with `~/.claude/skills/pr-walkthrough/server-run.sh` (or `launchctl kickstart -k gui/$(id -u)/com.trunktools.pr-walkthrough-server` once installed per the Installing section).
 - **"Ask about this" on selection**: selecting any text on the page (prose or a diff line) shows a floating button; clicking it attaches the selection as a quoted `selectedHunk` on the next question.
 - **Graceful degradation**: if the server is offline the panel shows an inline notice and the rest of the page still works.
 
@@ -142,9 +142,13 @@ The chat is an enhancement layered on the same anchor/server contract as `/expla
 When the anchor carries a real `repoNwo` + `prNumber`, each file header in the Walkthrough view gets an explicit **Viewed** checkbox (mirroring GitHub's own per-file control). Ticking it marks that file viewed in your GitHub PR review; unticking unmarks it. This is a distinct control from the collapse chevron, so reading/collapsing a file never silently changes your review state. Mechanics:
 
 - On load the page calls `{ type: "gh-viewed-states", repoNwo, prNumber }` and ticks each box to match GitHub, so the boxes reflect the real review rather than starting blank.
-- Toggling a box POSTs `{ type: "gh-mark-viewed", repoNwo, prNumber, path, viewed }` to the dashboard server, which resolves the PR node id (cached) and calls GitHub's `markFileAsViewed` / `unmarkFileAsViewed` GraphQL mutation via `gh`. On failure the box reverts and turns red; the PR state is unchanged.
+- Toggling a box POSTs `{ type: "gh-mark-viewed", repoNwo, prNumber, path, viewed }` to the server, which resolves the PR node id (cached) and calls GitHub's `markFileAsViewed` / `unmarkFileAsViewed` GraphQL mutation via `gh`. On failure the box reverts and turns red; the PR state is unchanged.
 - The `path` sent is the text of each `.file` header's first span, so those headers must carry the real repo-relative path (already required for the Diff view).
 - The checkbox appears only in the Walkthrough view (not the Diff tab) and only when a PR backs the page. Per-user and reversible; needs `gh` authenticated. A missing server or a local-branch walkthrough (no PR) simply shows no checkbox.
+
+## Local server (chat + viewed sync)
+
+The follow-up chat panel and GitHub Viewed sync need a small local server bundled with this skill (`server.mjs`, port 17799). It needs `node` (nvm fine), authenticated `gh` on PATH, and the `claude` CLI on PATH (only for the chat; the viewed sync uses `gh` alone). One-time install: copy `com.trunktools.pr-walkthrough-server.plist` to `~/Library/LaunchAgents/`, substitute your `__HOME__` and `__UID__` (`sed -i '' "s#__HOME__#$HOME#; s/__UID__/$(id -u)/"`), and `launchctl load` it; or just run `~/.claude/skills/pr-walkthrough/server-run.sh` when needed. Without it the page still renders fully; only the chat panel and viewed checkboxes are inactive. This makes the skill fully self-contained (no `dashboard` or other skill required).
 
 ## Content markup conventions
 

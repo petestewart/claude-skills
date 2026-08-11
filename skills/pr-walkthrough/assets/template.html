@@ -516,7 +516,7 @@
     var span = header.querySelector("span");
     var filePath = span ? span.textContent.trim() : "";
     if (!filePath) return Promise.reject(new Error("no file path"));
-    return fetch("http://127.0.0.1:7799/action", {
+    return fetch("http://127.0.0.1:17799/action", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ type: "gh-mark-viewed", repoNwo: a.repoNwo, prNumber: a.prNumber, path: filePath, viewed: viewed }),
@@ -541,7 +541,7 @@
   function hydrateViewed() {
     var a = prAnchor();
     if (!a) return;
-    fetch("http://127.0.0.1:7799/action", {
+    fetch("http://127.0.0.1:17799/action", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ type: "gh-viewed-states", repoNwo: a.repoNwo, prNumber: a.prNumber }),
@@ -699,7 +699,7 @@
 // --- Follow-up chat panel: ask Claude about this PR (talks to the local
 // dashboard command-center server; degrades gracefully when it is offline).
 (function () {
-  var SERVER = "http://127.0.0.1:7799/action";
+  var SERVER = "http://127.0.0.1:17799/action";
   var panel = document.getElementById("chat-panel");
   var head = document.getElementById("chat-head");
   var chev = head.querySelector(".chat-chev");
