@@ -35,7 +35,7 @@ if [ ! -d "$SKILLS_DEST" ]; then
 fi
 
 # Skills to install
-SKILLS=("project-planner" "orchestrator" "subagent" "qa" "typora-markdown" "article" "article-add" "article-queue" "review-as" "problem-statement" "prd" "specs" "plan" "ralph-script" "explain-project" "ship" "test-review" "standup" "workato" "datadog-logs" "fitness-plan" "pr-walkthrough")
+SKILLS=("project-planner" "orchestrator" "subagent" "qa" "typora-markdown" "article" "article-add" "article-queue" "review-as" "problem-statement" "prd" "specs" "plan" "ralph-script" "explain-project" "ship" "test-review" "standup" "workato" "datadog-logs" "fitness-plan" "pr-walkthrough" "knowledge-base")
 
 # Install each skill
 for skill in "${SKILLS[@]}"; do
@@ -57,7 +57,7 @@ for skill in "${SKILLS[@]}"; do
 done
 
 # Commands to install
-COMMANDS=("analyze-pr-feedback.md" "excalidraw.md" "planterview.md" "pr-description.md" "review-pr.md")
+COMMANDS=("analyze-pr-feedback.md" "excalidraw.md" "planterview.md" "pr-description.md" "review-pr.md" "kb-init.md" "kb-sync.md")
 
 # Create commands destination directory if it doesn't exist
 if [ ! -d "$COMMANDS_DEST" ]; then
@@ -127,3 +127,5 @@ echo "  /pr-description           - Generate a PR description from branch/Jira"
 echo "  /analyze-pr-feedback      - Analyze PR reviews and comments"
 echo "  /planterview [file]       - Interview to refine a spec (default: SPEC.md)"
 echo "  /excalidraw <description> - Generate Excalidraw diagram in Chrome"
+echo "  /kb-init <subject>        - Initialize a new knowledge-base project"
+echo "  /kb-sync [args]           - Sync conversation learnings into a knowledge base"

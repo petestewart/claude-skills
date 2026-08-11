@@ -276,6 +276,23 @@ Bootstraps the Ralph Wiggum autonomous loop into your project by creating `ralph
 - When bootstrapping autonomous execution for a planned project
 - Supports `--force` to skip interactive checks
 
+### Knowledge Base
+
+#### Knowledge Base (`knowledge-base` skill + `/kb-init` + `/kb-sync`)
+
+Defines a lightweight convention for AI-maintained knowledge bases: a `raw/` directory of read-only source material, a `wiki/` directory of AI-maintained topic articles, and an `outputs/` directory for generated artifacts. The skill documents the pattern; paired commands scaffold new projects and keep the wiki in sync as conversations and source material accumulate.
+
+**When to use:**
+- Research projects where source material accumulates over time (acquisitions, investigations, event planning, legal discovery)
+- Situations where facts need to be synthesized across many sources and kept current
+- When you want Claude to act as a persistent second brain across sessions
+- When you say "set up a knowledge base", "create a wiki", or invoke `/kb-init` / `/kb-sync`
+
+**Components:**
+- `/kb-init <subject>` — scaffolds `raw/`, `wiki/`, `outputs/`, a starter `CLAUDE.md`, and seed wiki files (`INDEX.md`, `decisions.md`, `open-questions.md`, `source-documents.md`)
+- `/kb-sync [args]` — reviews the current conversation and `raw/` for new material, applies the Wiki Update Protocol, and stamps "Last updated" dates on modified files. Accepts `decision: <text>`, `ingest: <filename>`, `email`, or freeform hints.
+- `knowledge-base` skill — documents the directory structure, wiki rules (one topic per file, `[[links]]`, facts vs. inferences, "Last updated" footers), and the 5-trigger update protocol (new raw file, decision, inference, new correspondence, fact change)
+
 ## Commands Included
 
 ### `/excalidraw <description>`
@@ -306,6 +323,14 @@ Analyzes GitHub PR reviews and comments, assesses their validity, and proposes s
 ### `/planterview [file]`
 
 Interactive interview to refine a spec file (default: SPEC.md). Asks clarifying questions to improve project specifications.
+
+### `/kb-init <subject>`
+
+Initializes a new knowledge-base project in the current directory. Creates `raw/`, `wiki/`, `outputs/`, a starter `CLAUDE.md` with the Wiki Update Protocol, and seed wiki files. See the Knowledge Base skill above.
+
+### `/kb-sync [args]`
+
+Applies the Wiki Update Protocol to an existing knowledge-base project. With no args, reviews the conversation and `raw/` for pending updates. Accepts `decision: <text>`, `ingest: <filename>`, `email`, or freeform hints. See the Knowledge Base skill above.
 
 ## Installation
 
