@@ -5,7 +5,9 @@
 set -euo pipefail
 
 NVM_DIR="$HOME/.nvm"
-DIR="$HOME/.claude/skills/pr-walkthrough"
+# Resolve the skill directory from this script, so it works wherever the skill
+# was installed (~/.claude/skills, ~/.agents/skills, or a repo checkout).
+DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # The default alias (e.g. "22" or "v22.21.1") → newest matching installed dir.
 node_bin=""

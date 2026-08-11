@@ -9,6 +9,16 @@ Produce a single self-contained HTML document that presents a PR the way its aut
 
 ## Workflow
 
+### 0. Make sure the local server is up
+
+Run this first, every time. It is idempotent and returns in milliseconds when the server is already running, and on a fresh install it writes the launchd agent and starts the server, so the reader never has to install or launch anything by hand.
+
+```bash
+~/.claude/skills/pr-walkthrough/assets/ensure-server.sh
+```
+
+If it reports the server could not start (usually no `node` on the machine), carry on and build the page anyway. It renders fully without the server; only the chat panel and the Viewed checkboxes are inactive. Mention that once at the end, don't stop to fix it.
+
 ### 1. Fetch the PR
 
 ```bash
@@ -140,7 +150,7 @@ The generated page includes a self-contained "Ask about this change" panel (bott
 
 - Talks to the skill's bundled local server (`http://127.0.0.1:17799/action`), which resumes `EXPLAIN_ANCHOR.sessionId` when set or cold-starts a session from `repo` + `refRange` when not, and returns the session id so the page reuses it for later questions.
 - The server answers with a cheap model by default (Haiku, via `DIFF_QUESTION_MODEL` in `skills/pr-walkthrough/server.mjs`), since these are short questions over a diff already in context. Override per-server with the `DASHBOARD_DIFF_QUESTION_MODEL` env var.
-- The server normally runs already (launchd: `com.trunktools.pr-walkthrough-server`), installed once. If the panel reports it's offline, start it with `~/.claude/skills/pr-walkthrough/server-run.sh` (or `launchctl kickstart -k gui/$(id -u)/com.trunktools.pr-walkthrough-server` once installed per the Installing section).
+- The server is installed and started by step 0, and the launchd agent (`com.trunktools.pr-walkthrough-server`) brings it back on login and after a crash. If the panel still reports it's offline, re-run `assets/ensure-server.sh`, which prints the reason.
 - **"Ask about this" on selection**: selecting any text on the page (prose or a diff line) shows a floating button; clicking it attaches the selection as a quoted `selectedHunk` on the next question.
 - **Graceful degradation**: if the server is offline the panel shows an inline notice and the rest of the page still works.
 
@@ -159,7 +169,11 @@ When the anchor carries a real `repoNwo` + `prNumber`, each file header in the W
 
 The follow-up chat panel and GitHub Viewed sync need a small local server bundled with this skill (`server.mjs`, port 17799). Every `/action` request must present the shared token in `~/.claude/pr-walkthrough-server-token` (auto-created on first use, mode 0600); `fill-placeholders.py` stamps the same token into each generated page. The token lives outside the skill directory because `install.sh` deletes and re-copies that directory on every reinstall, which would otherwise invalidate every page already generated. Origin is not a gate, since file:// pages send `Origin: null` and so does any other local HTML file the user might open. A page generated before the token existed, or copied to a different machine, gets a 403 and the panel says so; regenerate it. `artifactize.py` refuses to write a published copy that still contains the token.
 
-It needs `node` (nvm, Homebrew, mise, asdf, fnm, volta, or system all work), authenticated `gh` on PATH, and the `claude` CLI on PATH (only for the chat; the viewed sync uses `gh` alone). One-time install: copy `com.trunktools.pr-walkthrough-server.plist` to `~/Library/LaunchAgents/`, substitute your `__HOME__` and `__UID__` (`sed -i '' "s#__HOME__#$HOME#; s/__UID__/$(id -u)/"`), and `launchctl load` it; or just run `~/.claude/skills/pr-walkthrough/server-run.sh` when needed. Without it the page still renders fully; only the chat panel and viewed checkboxes are inactive. This makes the skill fully self-contained (no `dashboard` or other skill required).
+It needs `node` (nvm, Homebrew, mise, asdf, fnm, volta, or system all work), authenticated `gh` on PATH, and the `claude` CLI on PATH (only for the chat; the viewed sync uses `gh` alone).
+
+**Nothing is installed by hand.** Step 0 runs `assets/ensure-server.sh`, which renders `com.trunktools.pr-walkthrough-server.plist` (substituting the real skill directory and uid), writes it to `~/Library/LaunchAgents/`, bootstraps it, and waits for the server to answer. It rewrites the agent whenever the rendered plist changes, so a skill update takes effect on the next run. If launchd refuses, it starts `server-run.sh` directly for this session. Without any of it the page still renders fully; only the chat panel and viewed checkboxes are inactive. This makes the skill fully self-contained (no `dashboard` or other skill required).
+
+To remove the agent: `launchctl bootout gui/$(id -u)/com.trunktools.pr-walkthrough-server && rm ~/Library/LaunchAgents/com.trunktools.pr-walkthrough-server.plist`.
 
 ## Content markup conventions
 

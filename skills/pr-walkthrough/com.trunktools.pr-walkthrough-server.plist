@@ -4,11 +4,12 @@
   Self-contained local server for the pr-walkthrough skill (follow-up chat +
   GitHub "Viewed" sync). Bound to 127.0.0.1:17799.
 
-  Install:
-    cp com.trunktools.pr-walkthrough-server.plist ~/Library/LaunchAgents/
-    sed -i '' "s#__HOME__#$HOME#; s/__UID__/$(id -u)/" ~/Library/LaunchAgents/com.trunktools.pr-walkthrough-server.plist
-    launchctl load ~/Library/LaunchAgents/com.trunktools.pr-walkthrough-server.plist
-  Or run manually: ~/.claude/skills/pr-walkthrough/server-run.sh
+  Template. assets/ensure-server.sh renders __SKILL_DIR__ and __UID__, writes the
+  result to ~/Library/LaunchAgents/, and bootstraps it. The skill runs that script
+  itself, so there is nothing to install by hand.
+
+  To remove: launchctl bootout gui/$(id -u)/com.trunktools.pr-walkthrough-server
+             rm ~/Library/LaunchAgents/com.trunktools.pr-walkthrough-server.plist
 -->
 <plist version="1.0">
 <dict>
@@ -17,11 +18,11 @@
 
   <key>ProgramArguments</key>
   <array>
-    <string>__HOME__/.claude/skills/pr-walkthrough/server-run.sh</string>
+    <string>__SKILL_DIR__/server-run.sh</string>
   </array>
 
   <key>WorkingDirectory</key>
-  <string>__HOME__/.claude/skills/pr-walkthrough</string>
+  <string>__SKILL_DIR__</string>
 
   <key>RunAtLoad</key>
   <true/>
@@ -30,10 +31,10 @@
   <true/>
 
   <key>StandardOutPath</key>
-  <string>__HOME__/.claude/skills/pr-walkthrough/server.log</string>
+  <string>__SKILL_DIR__/server.log</string>
 
   <key>StandardErrorPath</key>
-  <string>__HOME__/.claude/skills/pr-walkthrough/server.err.log</string>
+  <string>__SKILL_DIR__/server.err.log</string>
 
   <key>UserID</key>
   <integer>__UID__</integer>
