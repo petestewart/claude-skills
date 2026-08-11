@@ -38,20 +38,32 @@ why_not() {
   [ -n "$tail_out" ] && printf '%s\n' "$tail_out"
 }
 
-if up; then
+# What the agent for THIS copy of the skill should look like.
+rendered=""
+[ -f "$PLIST_SRC" ] && rendered="$(sed "s#__SKILL_DIR__#$DIR#g; s#__UID__#$UID_NUM#g" "$PLIST_SRC")"
+current=""
+[ -f "$PLIST_DST" ] && current="$(cat "$PLIST_DST")"
+
+# Fast path: running AND the installed agent already matches this skill copy.
+# The second half matters — a server left over from an older install keeps
+# answering while its agent points at a path that no longer exists, so it would
+# never come back after a reboot. Checking both is a sed and a string compare.
+if up && [ -n "$rendered" ] && [ "$rendered" = "$current" ]; then
   echo "pr-walkthrough server: already running"
   exit 0
 fi
 
 # --- Install or refresh the launchd agent ---------------------------------
 # Rewrite whenever the rendered plist differs from what's installed, so a skill
-# update (new paths, new keys) takes effect without a manual reinstall.
-if [ -f "$PLIST_SRC" ] && [ -d "$HOME/Library/LaunchAgents" -o -w "$HOME/Library" ]; then
+# update or a move to a new install path takes effect without a manual reinstall.
+if [ -n "$rendered" ]; then
   mkdir -p "$HOME/Library/LaunchAgents"
-  rendered="$(sed "s#__SKILL_DIR__#$DIR#g; s#__UID__#$UID_NUM#g" "$PLIST_SRC")"
-  if [ ! -f "$PLIST_DST" ] || [ "$rendered" != "$(cat "$PLIST_DST")" ]; then
+  if [ "$rendered" != "$current" ]; then
     printf '%s\n' "$rendered" > "$PLIST_DST"
     launchctl bootout "gui/$UID_NUM/$LABEL" 2>/dev/null
+    # A server from the previous install still holds the port.
+    pkill -f "pr-walkthrough/server.mjs" 2>/dev/null
+    sleep 1
     echo "pr-walkthrough server: installed the launchd agent at $PLIST_DST"
   fi
   launchctl bootstrap "gui/$UID_NUM" "$PLIST_DST" 2>/dev/null ||
