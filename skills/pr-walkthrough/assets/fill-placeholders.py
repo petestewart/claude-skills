@@ -26,7 +26,9 @@ import pathlib
 import secrets
 import sys
 
-TOKEN_PATH = pathlib.Path.home() / ".claude" / "skills" / "pr-walkthrough" / "server-token"
+# Outside the skill directory on purpose: install.sh rm -rf's that directory on
+# every reinstall, which would invalidate every page already generated.
+TOKEN_PATH = pathlib.Path.home() / ".claude" / "pr-walkthrough-server-token"
 
 
 def load_or_create_token() -> str:

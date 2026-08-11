@@ -10,7 +10,7 @@
 
 import http from "node:http";
 import { writeFile, rename, mkdir, appendFile } from "node:fs/promises";
-import { readFileSync, existsSync, createWriteStream, writeFileSync, chmodSync } from "node:fs";
+import { readFileSync, existsSync, createWriteStream, writeFileSync, chmodSync, mkdirSync } from "node:fs";
 import { spawn, execFileSync } from "node:child_process";
 import path from "node:path";
 import os from "node:os";
@@ -23,7 +23,10 @@ const DIR = path.dirname(fileURLToPath(import.meta.url));
 const LOG_PATH = path.join(DIR, "server.log");
 const RUNS_DIR = path.join(DIR, "runs");
 const RUNS_JSON = path.join(RUNS_DIR, "runs.json");
-const TOKEN_PATH = path.join(DIR, "server-token");
+// Deliberately outside the skill directory: install.sh rm -rf's that directory
+// on every reinstall, which would rotate the token out from under a running
+// server and every page already generated.
+const TOKEN_PATH = path.join(os.homedir(), ".claude", "pr-walkthrough-server-token");
 
 // Shared secret between this server and the generated walkthrough pages. The
 // page generator (assets/fill-placeholders.py) reads or creates the same file
@@ -36,6 +39,7 @@ function loadOrCreateToken() {
     if (existing) return existing;
   } catch {}
   const tok = randomBytes(32).toString("hex");
+  mkdirSync(path.dirname(TOKEN_PATH), { recursive: true });
   writeFileSync(TOKEN_PATH, tok + "\n", { mode: 0o600 });
   try {
     chmodSync(TOKEN_PATH, 0o600);
