@@ -16,7 +16,15 @@ gh pr view <number> --repo <owner/repo> --json title,body,author,baseRefName,hea
 gh pr diff <number> --repo <owner/repo> > /tmp/pr<number>.diff
 ```
 
-For a local branch instead of a PR: `git diff main...HEAD`.
+For a local branch instead of a PR, run in **branch mode** (see below): `git diff main...HEAD > /tmp/<slug>.diff`.
+
+**Branch mode.** Everything below is written for a PR. With no PR, substitute:
+
+- **Slug**: the branch name lowercased with every run of non-alphanumeric characters replaced by `-` (`git rev-parse --abbrev-ref HEAD`), e.g. `add-pr-walkthrough-skill`. Use it everywhere `<number>` appears: diff at `/tmp/<slug>.diff`, output file `<slug>-walkthrough.html`, artifact copy `/tmp/<slug>-walkthrough.html`.
+- **Title**: a short phrase describing the change (from the commits), not a PR title.
+- **Header**: `<h1><span class="pr">branch-name</span> Title here</h1>`, and a `.meta` line with the range and file/line counts but no PR link.
+- **Anchor**: pass `--branch <slug>` instead of `--pr-number`/`--repo-nwo` in step 4, which sets `prNumber: null` and no `repoNwo`, so the Viewed checkboxes never render.
+- **Publishing**: same as step 5, matching the artifact list row by the branch slug in the title instead of a PR number.
 
 Read the full diff. The PR body usually contains the motivation and design rationale. Mine it for the Background section, but verify claims against the actual diff rather than repeating the body verbatim.
 
@@ -58,31 +66,32 @@ If a concern turns out to be a non-issue after verification, drop it entirely; d
 
 ### 4. Build the HTML
 
-Copy `assets/template.html` (in this skill's directory) to the output file, `pr-<number>-walkthrough.html` in the current directory. Replace `{{PR_NUMBER}}`, `{{PR_TITLE}}`, `{{CONTENT}}`, and `{{RAW_DIFF}}`, plus the follow-up-chat anchor placeholders below. The template's CSS and JS handle syntax highlighting (self-contained, no CDN) and collapsibility (click an `h2` to collapse its section; click a `.file` header to collapse its code block; TOC links auto-expand targets). Do not modify them, only produce content markup and fill in the placeholders.
+Copy `assets/template.html` (in this skill's directory) to the output file, `pr-<number>-walkthrough.html` in the current directory. Replace `{{CONTENT}}` with the markup you write. The remaining placeholders (`{{PAGE_TITLE}}`, `{{ANCHOR_JSON}}`, `{{RAW_DIFF}}`) all carry PR-supplied data and are filled by a script, never by hand (step 4b). The template's CSS and JS handle syntax highlighting (self-contained, no CDN) and collapsibility (click an `h2` to collapse its section; click a `.file` header to collapse its code block; TOC links auto-expand targets). Do not modify them, only produce content markup and fill in the placeholders.
 
 The page has two tabs at the top: **Walkthrough** (the `{{CONTENT}}` you write) and **Diff** (full file diffs, GitHub-style, built by JS from `{{RAW_DIFF}}`). The Diff view orders files to match where each path first appears in a `.file` header in the walkthrough, so use the real repo-relative path in every `.file` header. No extra markup is needed for the Diff view; it is generated from the embedded raw diff.
 
-Fill `{{RAW_DIFF}}` with the complete unified diff (the `/tmp/pr<number>.diff` from step 1), HTML-escaped. Do this after writing the walkthrough content, with a script rather than by hand:
+### 4b. Fill the PR-supplied placeholders (script only)
 
-Pass the filenames in through the environment so you don't have to substitute `<number>` inside the (quoted) heredoc, which is easy to leave literal:
+The title, the anchor, and the raw diff all come from GitHub, so they are untrusted text: a PR title containing `</title><script>…</script>` would execute in your browser with the private diff on the page. Never paste these in by hand. Run the script, which HTML-escapes the title and diff and JSON-encodes the anchor:
 
 ```bash
 NUM=<number>
-PR_DIFF="/tmp/pr${NUM}.diff" OUT="pr-${NUM}-walkthrough.html" python3 - <<'PY'
-import html, os, pathlib
-diff = pathlib.Path(os.environ["PR_DIFF"]).read_text()
-out = pathlib.Path(os.environ["OUT"])
-out.write_text(out.read_text().replace("{{RAW_DIFF}}", html.escape(diff)))
-PY
+python3 ~/.claude/skills/pr-walkthrough/assets/fill-placeholders.py "pr-${NUM}-walkthrough.html" \
+  --pr-number "$NUM" \
+  --title "<pr title>" \
+  --repo "$(git -C <repo> rev-parse --show-toplevel)" \
+  --ref-range "<baseSha>...<headSha>" \
+  --repo-nwo "<owner/name>" \
+  --diff "/tmp/pr${NUM}.diff"
 ```
 
-Fill in the chat anchor (`window.EXPLAIN_ANCHOR` in the `<head>`) so the follow-up chat panel can answer questions about this diff:
+For branch mode, swap `--pr-number`/`--repo-nwo` for `--branch <slug>`.
 
-- `{{REPO}}`: absolute path of the repo the diff came from (`git -C <repo> rev-parse --show-toplevel`).
-- `{{REF_RANGE}}`: the git range this walkthrough covers, in a form `git diff <range>` accepts from a fresh shell. For a PR, resolve to concrete SHAs (`<baseSha>...<headSha>`) so it still works after the branch is gone. For a local branch, use `<mergeBase>...HEAD` or `main...HEAD`.
-- `{{GENERATED_AT}}`: current UTC timestamp (ISO 8601, e.g. `2026-07-16T18:00:00Z`).
-- `{{REPO_NWO}}`: the GitHub `owner/name` the PR lives in (e.g. `trunk-tools/trunk-tools`). For a local-branch walkthrough with no PR, leave the placeholder as-is or set an empty string.
-- `{{PR_NUMBER_ANCHOR}}`: the PR number as a bare JSON number (e.g. `6855`), used by the viewed-file sync (below). For a local-branch walkthrough with no PR, set it to `null` (not a string) so the anchor stays valid JSON.
+Notes on the values:
+
+- `--ref-range`: the git range this walkthrough covers, in a form `git diff <range>` accepts from a fresh shell. For a PR, resolve to concrete SHAs so it still works after the branch is gone. For a branch, use `<mergeBase>...HEAD`.
+- The script stamps `generatedAt` itself and stamps in the local server token, which is what authenticates the page to the loopback server (chat + Viewed sync). Pages generated without it get a 403 from the server.
+- It prints the page title and fails loudly if any placeholder is left unfilled.
 
 The output file is a local artifact. Never commit it.
 
@@ -148,7 +157,9 @@ When the anchor carries a real `repoNwo` + `prNumber`, each file header in the W
 
 ## Local server (chat + viewed sync)
 
-The follow-up chat panel and GitHub Viewed sync need a small local server bundled with this skill (`server.mjs`, port 17799). It needs `node` (nvm fine), authenticated `gh` on PATH, and the `claude` CLI on PATH (only for the chat; the viewed sync uses `gh` alone). One-time install: copy `com.trunktools.pr-walkthrough-server.plist` to `~/Library/LaunchAgents/`, substitute your `__HOME__` and `__UID__` (`sed -i '' "s#__HOME__#$HOME#; s/__UID__/$(id -u)/"`), and `launchctl load` it; or just run `~/.claude/skills/pr-walkthrough/server-run.sh` when needed. Without it the page still renders fully; only the chat panel and viewed checkboxes are inactive. This makes the skill fully self-contained (no `dashboard` or other skill required).
+The follow-up chat panel and GitHub Viewed sync need a small local server bundled with this skill (`server.mjs`, port 17799). Every `/action` request must present the shared token in `server-token` (auto-created on first run, mode 0600, in the skill directory); `fill-placeholders.py` stamps the same token into each generated page. Origin is not a gate, since file:// pages send `Origin: null` and so does any other local HTML file the user might open. A page generated before the token existed, or copied to a different machine, gets a 403 and the panel says so; regenerate it. `artifactize.py` refuses to write a published copy that still contains the token.
+
+It needs `node` (nvm, Homebrew, mise, asdf, fnm, volta, or system all work), authenticated `gh` on PATH, and the `claude` CLI on PATH (only for the chat; the viewed sync uses `gh` alone). One-time install: copy `com.trunktools.pr-walkthrough-server.plist` to `~/Library/LaunchAgents/`, substitute your `__HOME__` and `__UID__` (`sed -i '' "s#__HOME__#$HOME#; s/__UID__/$(id -u)/"`), and `launchctl load` it; or just run `~/.claude/skills/pr-walkthrough/server-run.sh` when needed. Without it the page still renders fully; only the chat panel and viewed checkboxes are inactive. This makes the skill fully self-contained (no `dashboard` or other skill required).
 
 ## Content markup conventions
 

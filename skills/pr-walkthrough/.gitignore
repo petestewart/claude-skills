@@ -1,0 +1,6 @@
+# Runtime files created by server.mjs / fill-placeholders.py in the installed
+# copy of this skill. server-token is a secret and must never be committed.
+server-token
+server.log
+server.err.log
+runs/

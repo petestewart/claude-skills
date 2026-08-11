@@ -10,12 +10,12 @@
 
 import http from "node:http";
 import { writeFile, rename, mkdir, appendFile } from "node:fs/promises";
-import { readFileSync, existsSync, createWriteStream } from "node:fs";
+import { readFileSync, existsSync, createWriteStream, writeFileSync, chmodSync } from "node:fs";
 import { spawn, execFileSync } from "node:child_process";
 import path from "node:path";
 import os from "node:os";
 import { fileURLToPath } from "node:url";
-import { randomUUID } from "node:crypto";
+import { randomUUID, randomBytes, timingSafeEqual } from "node:crypto";
 
 const HOST = "127.0.0.1";
 const PORT = 17799;
@@ -23,6 +23,26 @@ const DIR = path.dirname(fileURLToPath(import.meta.url));
 const LOG_PATH = path.join(DIR, "server.log");
 const RUNS_DIR = path.join(DIR, "runs");
 const RUNS_JSON = path.join(RUNS_DIR, "runs.json");
+const TOKEN_PATH = path.join(DIR, "server-token");
+
+// Shared secret between this server and the generated walkthrough pages. The
+// page generator (assets/fill-placeholders.py) reads or creates the same file
+// and stamps the value into each page's anchor; /action rejects anything that
+// doesn't present it. Origin is not a usable gate here (file:// pages send
+// Origin: null), so this token is the whole authentication story.
+function loadOrCreateToken() {
+  try {
+    const existing = readFileSync(TOKEN_PATH, "utf8").trim();
+    if (existing) return existing;
+  } catch {}
+  const tok = randomBytes(32).toString("hex");
+  writeFileSync(TOKEN_PATH, tok + "\n", { mode: 0o600 });
+  try {
+    chmodSync(TOKEN_PATH, 0o600);
+  } catch {}
+  return tok;
+}
+const TOKEN = loadOrCreateToken();
 
 // Model for the /pr-walkthrough follow-up chat. These are short "what does this
 // do" questions over a diff already in context, so a cheap model is the right
@@ -527,7 +547,7 @@ const actions = {
 // fetch the API. We echo the caller's Origin (including the literal "null")
 // rather than "*", because the page sends Content-Type: application/json — which
 // makes the POST a non-simple request that preflights, and an echoed origin is
-// the interoperable answer. The sameOrigin() guard is the actual gate; these
+// the interoperable answer. The token check in authorized() is the actual gate; these
 // headers just let the browser deliver the request to that gate.
 function corsHeaders(req) {
   const origin = req.headers.origin || "*";
@@ -550,21 +570,26 @@ function sendJson(res, status, obj, extraHeaders) {
   res.end(body);
 }
 
-// Same-origin guard for POST: allow when Origin is absent (curl, same-page
-// fetch on some browsers), the literal "null" (a file:// page — the generated
-// walkthrough pages open from disk over file:// and send Origin: null), or a
-// localhost origin. A real cross-SITE attacker page always sends its own
-// http(s)://host origin, which stays blocked — "null" doesn't defeat that, so
-// allowing it costs nothing under the localhost-only posture.
-function sameOrigin(req) {
-  const origin = req.headers.origin;
-  if (!origin || origin === "null") return true;
-  try {
-    const h = new URL(origin).hostname;
-    return h === "127.0.0.1" || h === "localhost" || h === "[::1]" || h === "::1";
-  } catch {
-    return false;
-  }
+// Every /action caller must present the shared token. Origin alone cannot gate
+// this: generated walkthroughs open over file:// and send Origin: null, and so
+// does any other local HTML file or sandboxed document, so trusting "null" would
+// hand every action (spawning claude in a chosen directory, mutating GitHub
+// viewed state with the user's gh credentials) to any page the user opens.
+// The token is stamped into each generated page by assets/fill-placeholders.py.
+function authorized(req, body) {
+  const presented =
+    (body && typeof body.token === "string" && body.token) ||
+    req.headers["x-pr-walkthrough-token"] ||
+    "";
+  return tokenMatches(presented);
+}
+
+function tokenMatches(presented) {
+  if (typeof presented !== "string" || presented.length === 0) return false;
+  const a = Buffer.from(presented);
+  const b = Buffer.from(TOKEN);
+  if (a.length !== b.length) return false;
+  return timingSafeEqual(a, b);
 }
 
 function readBody(req) {
@@ -606,11 +631,6 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (req.method === "POST" && p === "/action") {
-    if (!sameOrigin(req)) {
-      sendJson(res, 403, { ok: false, error: "cross-origin blocked" }, cors);
-      log(`403 /action cross-origin (${req.headers.origin})`);
-      return;
-    }
     let body;
     try {
       const raw = await readBody(req);
@@ -618,6 +638,16 @@ const server = http.createServer(async (req, res) => {
     } catch (e) {
       sendJson(res, 400, { ok: false, error: `bad request body: ${e.message}` }, cors);
       log(`400 /action bad body: ${e.message}`);
+      return;
+    }
+    if (!authorized(req, body)) {
+      sendJson(
+        res,
+        403,
+        { ok: false, error: "unauthorized: this page was generated before the server token, regenerate it" },
+        cors
+      );
+      log(`403 /action unauthorized (origin ${req.headers.origin || "none"})`);
       return;
     }
     const type = body && body.type;

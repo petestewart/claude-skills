@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PR #{{PR_NUMBER}} Walkthrough: {{PR_TITLE}}</title>
-<script>window.EXPLAIN_ANCHOR = {"sessionId": null, "repo": "{{REPO}}", "refRange": "{{REF_RANGE}}", "generatedAt": "{{GENERATED_AT}}", "repoNwo": "{{REPO_NWO}}", "prNumber": {{PR_NUMBER_ANCHOR}}};</script>
+<title>{{PAGE_TITLE}}</title>
+<script>window.EXPLAIN_ANCHOR = {{ANCHOR_JSON}};</script>
 <style>
   :root {
     --bg: #0d1117;
@@ -519,7 +519,7 @@
     return fetch("http://127.0.0.1:17799/action", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ type: "gh-mark-viewed", repoNwo: a.repoNwo, prNumber: a.prNumber, path: filePath, viewed: viewed }),
+      body: JSON.stringify({ type: "gh-mark-viewed", token: a.token, repoNwo: a.repoNwo, prNumber: a.prNumber, path: filePath, viewed: viewed }),
     }).then(function (r) {
       return r.json().catch(function () { return {}; });
     }).then(function (d) {
@@ -544,7 +544,7 @@
     fetch("http://127.0.0.1:17799/action", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ type: "gh-viewed-states", repoNwo: a.repoNwo, prNumber: a.prNumber }),
+      body: JSON.stringify({ type: "gh-viewed-states", token: a.token, repoNwo: a.repoNwo, prNumber: a.prNumber }),
     }).then(function (r) { return r.json(); }).then(function (d) {
       if (!d || d.ok !== true || !d.states) return;
       document.querySelectorAll("#view-walkthrough .file .viewed-toggle").forEach(function (label) {
@@ -829,6 +829,8 @@
     var BREVITY = "Keep your answer brief and to the point unless I ask for more detail.";
     var payload = {
       type: "diff-question",
+      // Shared secret with the local server, stamped in at generation time.
+      token: (window.EXPLAIN_ANCHOR || {}).token,
       anchor: window.EXPLAIN_ANCHOR,
       question: q + "\n\n(" + BREVITY + ")",
       selectedHunk: selectedHunk || ""
@@ -842,6 +844,10 @@
       body: JSON.stringify(payload)
     }).then(function (r) { return r.json(); }).then(function (data) {
       thinking.remove();
+      if (data && data.ok === false) {
+        addNotice(data.error || "the local server rejected the request");
+        return;
+      }
       addMsg("a", (data && (data.answer || data.result || data.text)) || "(no answer returned)");
       if (data && data.sessionId && window.EXPLAIN_ANCHOR) {
         window.EXPLAIN_ANCHOR.sessionId = data.sessionId;

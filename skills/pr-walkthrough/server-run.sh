@@ -23,14 +23,42 @@ if [ -f "$NVM_DIR/alias/default" ]; then
   fi
 fi
 
-# Fallback: newest installed node of any version.
+# Fallback: newest installed nvm node of any version.
 if [ -z "$node_bin" ]; then
   match="$(ls -d "$NVM_DIR"/versions/node/v* 2>/dev/null | sort -V | tail -1 || true)"
   [ -n "$match" ] && [ -x "$match/bin/node" ] && node_bin="$match/bin/node"
 fi
 
+# No nvm: node may come from Homebrew, mise, asdf, fnm, volta, or the system.
 if [ -z "$node_bin" ]; then
-  echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) server-run.sh: could not resolve an nvm node under $NVM_DIR" >> "$DIR/server.log"
+  candidate="$(command -v node 2>/dev/null || true)"
+  [ -n "$candidate" ] && [ -x "$candidate" ] && node_bin="$candidate"
+fi
+
+# launchd starts us with a bare PATH, so probe the usual absolute locations too.
+if [ -z "$node_bin" ]; then
+  for candidate in \
+    /opt/homebrew/bin/node \
+    /usr/local/bin/node \
+    /usr/bin/node \
+    "$HOME/.local/bin/node" \
+    "$HOME/.local/share/mise/shims/node" \
+    "$HOME/.asdf/shims/node" \
+    "$HOME/.volta/bin/node" \
+    "$HOME/Library/Application Support/fnm/aliases/default/bin/node"; do
+    if [ -x "$candidate" ]; then node_bin="$candidate"; break; fi
+  done
+fi
+
+# Last resort: ask a login shell, which sources the profile that sets up any
+# version manager we did not probe for.
+if [ -z "$node_bin" ]; then
+  candidate="$(/bin/bash -lc 'command -v node' 2>/dev/null || true)"
+  [ -n "$candidate" ] && [ -x "$candidate" ] && node_bin="$candidate"
+fi
+
+if [ -z "$node_bin" ]; then
+  echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) server-run.sh: no node found (checked $NVM_DIR, PATH, common install paths, login shell)" >> "$DIR/server.log"
   exit 1
 fi
 

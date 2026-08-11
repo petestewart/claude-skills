@@ -66,6 +66,9 @@ if "EXPLAIN_ANCHOR = {" in out:
     sys.exit("artifactize: chat anchor survived the transform, refusing to write")
 if 'id="chat-transcript"' in out:
     sys.exit("artifactize: chat panel survived the transform, refusing to write")
+# The anchor carries the local server token; a published page must never leak it.
+if '"token"' in out or "EXPLAIN_ANCHOR.token" in out:
+    sys.exit("artifactize: server token survived the transform, refusing to write")
 
 dst.write_text(out)
 print(title)
