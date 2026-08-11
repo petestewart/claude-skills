@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Self-contained local server for the pr-walkthrough skill (follow-up chat +
+  GitHub "Viewed" sync). Bound to 127.0.0.1:17799.
+
+  Template. assets/ensure-server.sh renders __SKILL_DIR__ and __UID__, writes the
+  result to ~/Library/LaunchAgents/, and bootstraps it. The skill runs that script
+  itself, so there is nothing to install by hand.
+
+  To remove: launchctl bootout gui/$(id -u)/com.trunktools.pr-walkthrough-server
+             rm ~/Library/LaunchAgents/com.trunktools.pr-walkthrough-server.plist
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.trunktools.pr-walkthrough-server</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>__SKILL_DIR__/server-run.sh</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string>__SKILL_DIR__</string>
+
+  <key>RunAtLoad</key>
+  <true/>
+
+  <key>KeepAlive</key>
+  <true/>
+
+  <key>StandardOutPath</key>
+  <string>__SKILL_DIR__/server.log</string>
+
+  <key>StandardErrorPath</key>
+  <string>__SKILL_DIR__/server.err.log</string>
+
+  <key>UserID</key>
+  <integer>__UID__</integer>
+</dict>
+</plist>

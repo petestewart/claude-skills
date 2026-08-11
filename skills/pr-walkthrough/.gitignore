@@ -1,0 +1,7 @@
+# Runtime files created by server.mjs in the installed copy of this skill.
+# (The server token lives in ~/.claude/pr-walkthrough-server-token, outside the
+# directory install.sh wipes, so it never lands here.)
+server-token
+server.log
+server.err.log
+runs/

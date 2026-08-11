@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{PAGE_TITLE}}</title>
+<script>window.EXPLAIN_ANCHOR = {{ANCHOR_JSON}};</script>
+<style>
+  :root {
+    --bg: #0d1117;
+    --panel: #161b22;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --accent: #58a6ff;
+    --green: #3fb950;
+    --red: #f85149;
+    --add-bg: rgba(46, 160, 67, 0.15);
+    --del-bg: rgba(248, 81, 73, 0.15);
+    --ctx: #8b949e;
+    --mono: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    line-height: 1.6;
+  }
+  .wrap { max-width: 940px; margin: 0 auto; padding: 48px 24px 96px; }
+  h1 { font-size: 1.7rem; margin: 0 0 4px; }
+  h1 .pr { color: var(--accent); }
+  .meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 40px; }
+  .meta a { color: var(--accent); text-decoration: none; }
+  h2 {
+    font-size: 1.25rem;
+    margin: 56px 0 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  h2.toggle { cursor: pointer; user-select: none; }
+  h2.toggle::after {
+    content: "▾";
+    float: right;
+    color: var(--muted);
+    font-size: 0.85rem;
+    transition: transform 0.15s;
+  }
+  h2.toggle.collapsed::after { transform: rotate(-90deg); }
+  .section-body.hidden { display: none; }
+  .file.toggle { cursor: pointer; user-select: none; }
+  .file > span:first-child { flex: 1; }
+  .file .chev { color: var(--muted); font-size: 0.75rem; transition: transform 0.15s; }
+  .file.collapsed .chev { transform: rotate(-90deg); }
+  .file.collapsed { border-bottom: 1px solid var(--border); border-radius: 6px; }
+  pre.hidden { display: none; }
+  h2 .num {
+    display: inline-block;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    width: 30px; height: 30px;
+    line-height: 28px;
+    text-align: center;
+    font-size: 0.85rem;
+    color: var(--accent);
+    margin-right: 10px;
+  }
+  h3 { font-size: 1.02rem; margin: 28px 0 8px; color: var(--text); }
+  p { margin: 10px 0; }
+  .muted { color: var(--muted); }
+  code {
+    font-family: var(--mono);
+    font-size: 0.85em;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 5px;
+  }
+  .file {
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    color: var(--muted);
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-bottom: none;
+    border-radius: 6px 6px 0 0;
+    padding: 7px 12px;
+    margin-top: 16px;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .file .tag { color: var(--accent); }
+  .file .tag.new { color: var(--green); }
+  .file .viewed-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 0.72rem;
+    user-select: none;
+    flex: 0 0 auto;
+  }
+  .file .viewed-toggle input { cursor: pointer; margin: 0; accent-color: var(--green); }
+  .file .viewed-toggle.pending { opacity: 0.5; }
+  .file .viewed-toggle.err { color: #f85149; }
+  pre.diff, pre.code {
+    margin: 0 0 8px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 0 0 6px 6px;
+    padding: 12px 0;
+    overflow-x: auto;
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    line-height: 1.5;
+  }
+  /* The pre itself collapses whitespace; each line is a block span carrying its
+     own `white-space: pre`, so source newlines between spans don't render. */
+  pre.diff { white-space: normal; }
+  pre.diff > span { display: block; padding: 0 16px; white-space: pre; }
+  pre.diff .a { background: var(--add-bg); }
+  pre.diff .d { background: var(--del-bg); }
+  pre.diff .c { opacity: 0.6; }
+  pre.diff .diff-mark { display: inline-block; width: 1ch; margin-right: 0.75ch; }
+  pre.code { padding: 12px 16px; color: #c9d1d9; }
+  /* syntax tokens (GitHub-dark palette) */
+  .tok-k { color: #ff7b72; }
+  .tok-s { color: #a5d6ff; }
+  .tok-c { color: #8b949e; font-style: italic; }
+  .tok-n { color: #79c0ff; }
+  .tok-t { color: #ffa657; }
+  .tok-add { color: var(--green); }
+  .tok-del { color: var(--red); }
+  .callout {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin: 16px 0;
+    font-size: 0.92rem;
+  }
+  .callout.warn { border-left-color: #d29922; }
+  ul { margin: 8px 0; padding-left: 24px; }
+  li { margin: 4px 0; }
+  table { border-collapse: collapse; width: 100%; margin: 16px 0; font-size: 0.88rem; }
+  th, td { border: 1px solid var(--border); padding: 8px 12px; text-align: left; }
+  th { background: var(--panel); }
+  .sev {
+    display: inline-block;
+    border-radius: 4px;
+    padding: 1px 8px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    vertical-align: 2px;
+  }
+  .sev.major { background: var(--del-bg); color: var(--red); border: 1px solid var(--red); }
+  .sev.minor { background: rgba(210, 153, 34, 0.15); color: #d29922; border: 1px solid #d29922; }
+  .sev.nit { background: var(--panel); color: var(--muted); border: 1px solid var(--border); }
+  .finding {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin: 16px 0;
+  }
+  .finding h3 { margin: 0 0 4px; }
+  .finding .loc { font-family: var(--mono); font-size: 0.75rem; color: var(--muted); }
+  .finding p { font-size: 0.92rem; }
+  .toc { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 16px 24px; margin: 24px 0; }
+  .toc ol { margin: 8px 0; padding-left: 22px; }
+  .toc a { color: var(--accent); text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+  /* --- View tabs: Walkthrough vs Diff --- */
+  #doc-header { margin-bottom: 8px; }
+  #doc-header .meta { margin-bottom: 16px; }
+  .tabs { display: flex; gap: 4px; margin: 0 0 8px; border-bottom: 1px solid var(--border); }
+  .tab {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid transparent;
+    border-bottom: none;
+    padding: 8px 18px;
+    font-size: 0.92rem;
+    font-family: inherit;
+    cursor: pointer;
+    border-radius: 6px 6px 0 0;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active {
+    color: var(--text);
+    background: var(--panel);
+    border-color: var(--border);
+    margin-bottom: -1px;
+  }
+  .view.hidden { display: none; }
+  #view-diff .file { margin-top: 24px; }
+  pre.diff .h { color: var(--accent); opacity: 0.85; background: rgba(88, 166, 255, 0.08); }
+  /* --- Follow-up chat panel --- */
+  #chat-panel {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 360px;
+    max-width: calc(100vw - 40px);
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    font-size: 0.9rem;
+    display: flex;
+    flex-direction: column;
+    max-height: 70vh;
+  }
+  #chat-panel.collapsed { max-height: none; }
+  #chat-panel.collapsed .chat-body { display: none; }
+  #chat-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    cursor: pointer;
+    user-select: none;
+    border-bottom: 1px solid var(--border);
+    font-weight: 600;
+  }
+  #chat-panel.collapsed #chat-head { border-bottom: none; }
+  #chat-head .chat-head-right { display: flex; align-items: center; gap: 10px; }
+  #chat-head .chat-chev { color: var(--muted); font-size: 0.8rem; }
+  #chat-new {
+    background: transparent;
+    color: var(--muted);
+    border: none;
+    padding: 0;
+    line-height: 1;
+    font-size: 0.95rem;
+    cursor: pointer;
+  }
+  #chat-new:hover { color: var(--text); }
+  .chat-body { display: flex; flex-direction: column; min-height: 0; }
+  #chat-transcript {
+    overflow-y: auto;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    flex: 1;
+  }
+  .chat-msg { line-height: 1.5; }
+  .chat-msg.q { color: var(--accent); }
+  .chat-msg.q .chat-role, .chat-msg.a .chat-role {
+    display: block;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    margin-bottom: 2px;
+  }
+  .chat-msg pre {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 8px 10px;
+    overflow-x: auto;
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    white-space: pre;
+  }
+  .chat-msg code {
+    font-family: var(--mono);
+    font-size: 0.82em;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 4px;
+  }
+  .chat-msg .chat-quote {
+    margin-top: 6px;
+    padding: 6px 10px;
+    border-left: 3px solid var(--green);
+    border-radius: 4px;
+    background: var(--bg);
+    color: var(--green);
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .chat-notice { color: var(--muted); font-size: 0.82rem; font-style: italic; }
+  .chat-spinner { display: flex; align-items: center; gap: 8px; }
+  .chat-spinner::before {
+    content: "";
+    display: inline-block;
+    width: 12px; height: 12px;
+    border: 2px solid var(--muted);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: chat-spin 0.8s linear infinite;
+    flex: none;
+  }
+  @keyframes chat-spin { to { transform: rotate(360deg); } }
+  #chat-attach {
+    margin: 0 14px;
+    padding: 8px 10px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 5px;
+    font-size: 0.78rem;
+    color: var(--muted);
+    max-height: 90px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    position: relative;
+  }
+  #chat-attach .clear-attach {
+    position: absolute;
+    top: 4px; right: 6px;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+  .chat-input-row { display: flex; gap: 8px; padding: 10px 14px; border-top: 1px solid var(--border); }
+  #chat-input {
+    flex: 1;
+    resize: none;
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-family: inherit;
+    font-size: 0.88rem;
+    line-height: 1.4;
+  }
+  #chat-send {
+    background: var(--accent);
+    color: #0d1117;
+    border: none;
+    border-radius: 6px;
+    padding: 0 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  #chat-send:disabled { opacity: 0.5; cursor: default; }
+  #ask-btn {
+    position: absolute;
+    z-index: 10000;
+    background: var(--accent);
+    color: #0d1117;
+    border: none;
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    display: none;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+<div id="doc-header"></div>
+<div class="tabs" role="tablist">
+  <button class="tab active" data-view="walkthrough">Walkthrough</button>
+  <button class="tab" data-view="diff">Diff</button>
+</div>
+<div id="view-walkthrough" class="view">
+
+{{CONTENT}}
+
+</div>
+<div id="view-diff" class="view hidden"></div>
+<pre id="raw-diff-data" hidden>{{RAW_DIFF}}</pre>
+</div>
+
+<button id="ask-btn">Ask about this</button>
+<div id="chat-panel" class="collapsed">
+  <div id="chat-head"><span>Ask about this change</span><span class="chat-head-right"><button id="chat-new" title="Start a new thread" aria-label="Start a new thread">✕</button><span class="chat-chev">▸</span></span></div>
+  <div class="chat-body">
+    <div id="chat-transcript"></div>
+    <div class="chat-input-row">
+      <textarea id="chat-input" rows="2" placeholder="Ask a question about this PR..."></textarea>
+      <button id="chat-send">Send</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  function esc(s) {
+    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+  var KW =
+    "export|import|from|const|let|var|function|return|async|await|if|else|for|of|in|new|" +
+    "class|extends|static|private|readonly|type|interface|satisfies|throw|try|catch|finally|" +
+    "continue|true|false|null|undefined|this|as";
+  var plainRe = new RegExp("\\b(" + KW + ")\\b|\\b([A-Z][A-Za-z0-9_]*)\\b|\\b(\\d[\\d_]*)\\b", "g");
+  function hlPlain(t) {
+    var out = "";
+    var i = 0;
+    var m;
+    plainRe.lastIndex = 0;
+    while ((m = plainRe.exec(t))) {
+      out += esc(t.slice(i, m.index));
+      if (m[1]) out += '<span class="tok-k">' + esc(m[1]) + "</span>";
+      else if (m[2]) out += '<span class="tok-t">' + esc(m[2]) + "</span>";
+      else out += '<span class="tok-n">' + esc(m[3]) + "</span>";
+      i = m.index + m[0].length;
+    }
+    return out + esc(t.slice(i));
+  }
+  var lineRe = /(\/\/.*$)|("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`)/g;
+  function hlLine(line) {
+    // whole-line jsdoc / block-comment lines
+    if (/^\s*(\/\*|\*)/.test(line)) return '<span class="tok-c">' + esc(line) + "</span>";
+    var html = "";
+    var i = 0;
+    var m;
+    lineRe.lastIndex = 0;
+    while ((m = lineRe.exec(line))) {
+      html += hlPlain(line.slice(i, m.index));
+      if (m[1]) html += '<span class="tok-c">' + esc(m[1]) + "</span>";
+      else html += '<span class="tok-s">' + esc(m[2]) + "</span>";
+      i = m.index + m[0].length;
+    }
+    return html + hlPlain(line.slice(i));
+  }
+
+  function highlightSpan(span) {
+    // Hunk headers (@@ ...) are left as plain escaped text, no syntax pass.
+    if (span.classList.contains("h")) return;
+    var text = span.textContent;
+    var add = span.classList.contains("a");
+    var del = span.classList.contains("d");
+    // First column is the +/-/space marker; render it in its own fixed-width
+    // gutter so code lines up regardless of the marker.
+    var markCls = add ? "tok-add" : del ? "tok-del" : "";
+    var mark = '<span class="diff-mark' + (markCls ? " " + markCls : "") + '">' + esc(text.charAt(0) || " ") + "</span>";
+    span.innerHTML = mark + hlLine(text.slice(1));
+  }
+
+  // --- Collapsible code blocks: click the file header to toggle the pre below it.
+  function attachFileToggle(header) {
+    var pre = header.nextElementSibling;
+    if (!pre || pre.tagName !== "PRE") return;
+    header.classList.add("toggle");
+    attachViewedControl(header);
+    var chev = document.createElement("span");
+    chev.className = "chev";
+    chev.textContent = "▾";
+    header.appendChild(chev);
+    header.addEventListener("click", function () {
+      header.classList.toggle("collapsed");
+      pre.classList.toggle("hidden");
+    });
+  }
+
+  // Return the PR anchor iff this walkthrough is backed by a real GitHub PR
+  // (repoNwo + prNumber filled in), else null. Used to gate the Viewed control.
+  function prAnchor() {
+    var a = window.EXPLAIN_ANCHOR || {};
+    if (!a.repoNwo || a.repoNwo.indexOf("{{") === 0) return null;
+    if (typeof a.prNumber !== "number" || a.prNumber <= 0) return null;
+    return a;
+  }
+
+  // Add an explicit "Viewed" checkbox to a file header that mirrors GitHub's own
+  // per-file Viewed control: ticking it marks the file viewed on the PR review,
+  // unticking unmarks it. Independent of collapse. Omitted entirely when there's
+  // no PR behind this page (local-branch walkthrough) so the box never lies.
+  function attachViewedControl(header) {
+    // Only in the Walkthrough view (the reading surface); the Diff tab is the raw
+    // reference. Keeping it to one view avoids two out-of-sync boxes per path.
+    if (!prAnchor() || !header.closest("#view-walkthrough")) return;
+    var label = document.createElement("label");
+    label.className = "viewed-toggle";
+    var box = document.createElement("input");
+    box.type = "checkbox";
+    var txt = document.createElement("span");
+    txt.textContent = "Viewed";
+    label.appendChild(box);
+    label.appendChild(txt);
+    // Clicks on the control must not bubble to the header's collapse handler.
+    label.addEventListener("click", function (e) { e.stopPropagation(); });
+    box.addEventListener("change", function () {
+      label.classList.remove("err");
+      label.classList.add("pending");
+      syncViewed(header, box.checked)
+        .then(function () { label.classList.remove("pending"); })
+        .catch(function () {
+          // Revert the box and flag the failure; the PR state didn't change.
+          label.classList.remove("pending");
+          label.classList.add("err");
+          box.checked = !box.checked;
+        });
+    });
+    header.appendChild(label);
+  }
+
+  // POST a viewed/unviewed state to the dashboard server, which calls GitHub's
+  // markFileAsViewed mutation. Rejects on any non-OK response so the caller can
+  // revert the checkbox; resolves on success.
+  function syncViewed(header, viewed) {
+    var a = prAnchor();
+    if (!a) return Promise.reject(new Error("no PR anchor"));
+    var span = header.querySelector("span");
+    var filePath = span ? span.textContent.trim() : "";
+    if (!filePath) return Promise.reject(new Error("no file path"));
+    return fetch("http://127.0.0.1:17799/action", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "gh-mark-viewed", token: a.token, repoNwo: a.repoNwo, prNumber: a.prNumber, path: filePath, viewed: viewed }),
+    }).then(function (r) {
+      return r.json().catch(function () { return {}; });
+    }).then(function (d) {
+      if (!d || d.ok !== true) throw new Error((d && d.error) || "sync failed");
+      return d;
+    });
+  }
+
+  document.querySelectorAll("pre.code").forEach(function (pre) {
+    pre.innerHTML = pre.textContent.split("\n").map(hlLine).join("\n");
+  });
+  document.querySelectorAll("#view-walkthrough pre.diff > span").forEach(highlightSpan);
+  document.querySelectorAll("#view-walkthrough .file").forEach(attachFileToggle);
+  hydrateViewed();
+
+  // On load, ask the server for GitHub's current per-file Viewed state and tick
+  // the checkboxes to match, so the boxes mirror the PR rather than starting
+  // blank. Silent no-op if there's no PR anchor or the server is offline.
+  function hydrateViewed() {
+    var a = prAnchor();
+    if (!a) return;
+    fetch("http://127.0.0.1:17799/action", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "gh-viewed-states", token: a.token, repoNwo: a.repoNwo, prNumber: a.prNumber }),
+    }).then(function (r) { return r.json(); }).then(function (d) {
+      if (!d || d.ok !== true || !d.states) return;
+      document.querySelectorAll("#view-walkthrough .file .viewed-toggle").forEach(function (label) {
+        var header = label.closest(".file");
+        var span = header && header.querySelector("span");
+        var filePath = span ? span.textContent.trim() : "";
+        var box = label.querySelector("input");
+        if (box && filePath in d.states) box.checked = !!d.states[filePath];
+      });
+    }).catch(function () {});
+  }
+
+  // --- Move the title/meta above the tabs so they show in both views.
+  var vw = document.getElementById("view-walkthrough");
+  var docHeader = document.getElementById("doc-header");
+  if (vw && docHeader) {
+    var h1 = vw.querySelector("h1");
+    var meta = vw.querySelector(".meta");
+    if (h1) docHeader.appendChild(h1);
+    if (meta) docHeader.appendChild(meta);
+  }
+
+  // --- Tabs: Walkthrough vs Diff. The Diff view shows full file diffs
+  // (GitHub-style), ordered to match where each file first appears in the
+  // walkthrough. It is built lazily from the raw diff on first switch.
+  var tabs = document.querySelectorAll(".tab");
+  var views = {
+    walkthrough: document.getElementById("view-walkthrough"),
+    diff: document.getElementById("view-diff")
+  };
+  var diffBuilt = false;
+  function show(name) {
+    tabs.forEach(function (t) { t.classList.toggle("active", t.dataset.view === name); });
+    Object.keys(views).forEach(function (k) {
+      if (views[k]) views[k].classList.toggle("hidden", k !== name);
+    });
+    if (name === "diff" && !diffBuilt) { buildDiff(); diffBuilt = true; }
+  }
+  tabs.forEach(function (t) {
+    t.addEventListener("click", function () { show(t.dataset.view); });
+  });
+
+  function walkthroughOrder() {
+    var order = [];
+    document.querySelectorAll("#view-walkthrough .file > span:first-child").forEach(function (s) {
+      var p = s.textContent.trim();
+      if (p && order.indexOf(p) === -1) order.push(p);
+    });
+    return order;
+  }
+
+  function parseRawDiff() {
+    var data = document.getElementById("raw-diff-data");
+    var raw = data ? data.textContent : "";
+    var files = {};
+    var cur = null;
+    raw.split("\n").forEach(function (line) {
+      var m = line.match(/^diff --git a\/(.*?) b\/(.*)$/);
+      if (m) { cur = files[m[2]] = { lines: [], add: 0, del: 0 }; return; }
+      if (!cur || line === "") return;
+      if (/^(index |--- |\+\+\+ |old mode |new mode |new file mode |deleted file mode |similarity index |dissimilarity index |rename |copy |Binary )/.test(line)) return;
+      var c0 = line.charAt(0);
+      if (line.indexOf("@@") === 0) cur.lines.push({ cls: "h", text: line });
+      else if (c0 === "+") { cur.add++; cur.lines.push({ cls: "a", text: line }); }
+      else if (c0 === "-") { cur.del++; cur.lines.push({ cls: "d", text: line }); }
+      else cur.lines.push({ cls: "c", text: line });
+    });
+    return files;
+  }
+
+  function buildDiff() {
+    var container = document.getElementById("view-diff");
+    var files = parseRawDiff();
+    var paths = Object.keys(files);
+    if (!paths.length) {
+      container.innerHTML = '<p class="muted">Raw diff not embedded in this page.</p>';
+      return;
+    }
+    var ordered = [];
+    var seen = {};
+    walkthroughOrder().forEach(function (p) {
+      if (files[p]) { ordered.push(p); seen[p] = 1; }
+    });
+    paths.forEach(function (p) { if (!seen[p]) ordered.push(p); });
+    ordered.forEach(function (p) {
+      var f = files[p];
+      var head = document.createElement("div");
+      head.className = "file";
+      var name = document.createElement("span");
+      name.textContent = p;
+      var tag = document.createElement("span");
+      tag.className = "tag";
+      tag.textContent = "+" + f.add + " / -" + f.del;
+      head.appendChild(name);
+      head.appendChild(tag);
+      var pre = document.createElement("pre");
+      pre.className = "diff";
+      f.lines.forEach(function (ln) {
+        var s = document.createElement("span");
+        s.className = ln.cls;
+        s.textContent = ln.text;
+        pre.appendChild(s);
+      });
+      container.appendChild(head);
+      container.appendChild(pre);
+    });
+    container.querySelectorAll("pre.diff > span").forEach(highlightSpan);
+    container.querySelectorAll(".file").forEach(attachFileToggle);
+  }
+
+  // --- Collapsible sections: wrap everything between one h2 and the next,
+  // and toggle the wrapper when the heading is clicked.
+  document.querySelectorAll("#view-walkthrough > h2").forEach(function (h2) {
+    var body = document.createElement("div");
+    body.className = "section-body";
+    var node = h2.nextSibling;
+    while (node && !(node.nodeType === 1 && node.tagName === "H2")) {
+      var next = node.nextSibling;
+      body.appendChild(node);
+      node = next;
+    }
+    h2.parentNode.insertBefore(body, h2.nextSibling);
+    h2.classList.add("toggle");
+    h2.addEventListener("click", function () {
+      h2.classList.toggle("collapsed");
+      body.classList.toggle("hidden");
+    });
+  });
+
+  // A TOC/anchor jump must expand the target section first or the browser
+  // can't scroll to it.
+  function expandForHash(hash) {
+    if (!hash) return;
+    var target = document.getElementById(hash.replace(/^#/, ""));
+    if (!target) return;
+    var h2 = target.tagName === "H2" ? target : target.closest(".section-body");
+    if (h2 && h2.classList.contains("section-body")) h2 = h2.previousElementSibling;
+    if (h2 && h2.classList.contains("collapsed")) h2.click();
+    target.scrollIntoView();
+  }
+  window.addEventListener("hashchange", function () {
+    expandForHash(location.hash);
+  });
+  document.querySelectorAll(".toc a").forEach(function (a) {
+    a.addEventListener("click", function () {
+      expandForHash(a.getAttribute("href"));
+    });
+  });
+})();
+</script>
+<script>
+// --- Follow-up chat panel: ask Claude about this PR (talks to the local
+// dashboard command-center server; degrades gracefully when it is offline).
+(function () {
+  var SERVER = "http://127.0.0.1:17799/action";
+  var panel = document.getElementById("chat-panel");
+  var head = document.getElementById("chat-head");
+  var chev = head.querySelector(".chat-chev");
+  var transcript = document.getElementById("chat-transcript");
+  var input = document.getElementById("chat-input");
+  var send = document.getElementById("chat-send");
+  var askBtn = document.getElementById("ask-btn");
+  var attachEl = null;
+  var selectedHunk = null;
+  var busy = false;
+
+  function esc(s) {
+    return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+  // Tiny inline-markdown renderer: escape first, then apply a safe subset.
+  function md(s) {
+    var html = esc(s);
+    html = html.replace(/```([\s\S]*?)```/g, function (_, c) {
+      return "<pre>" + c.replace(/^\n/, "") + "</pre>";
+    });
+    html = html.replace(/`([^`]+)`/g, "<code>$1</code>");
+    html = html.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+    html = html.replace(/\n/g, "<br>");
+    return html;
+  }
+
+  // --- Panel open/close, remembered in localStorage.
+  var KEY = "pr-walkthrough-chat-open";
+  function setOpen(open) {
+    panel.classList.toggle("collapsed", !open);
+    chev.textContent = open ? "▾" : "▸";
+    try { localStorage.setItem(KEY, open ? "1" : "0"); } catch (e) {}
+  }
+  head.addEventListener("click", function () {
+    setOpen(panel.classList.contains("collapsed"));
+  });
+
+  // --- New thread: clear the transcript and drop the session so the next
+  // question cold-starts a fresh Claude session instead of resuming this one.
+  var newBtn = document.getElementById("chat-new");
+  newBtn.addEventListener("click", function (e) {
+    e.stopPropagation();
+    if (busy) return;
+    transcript.innerHTML = "";
+    selectedHunk = null;
+    renderAttach();
+    if (window.EXPLAIN_ANCHOR) window.EXPLAIN_ANCHOR.sessionId = null;
+    input.value = "";
+    input.focus();
+  });
+  try { if (localStorage.getItem(KEY) === "1") setOpen(true); } catch (e) {}
+
+  function scrollDown() { transcript.scrollTop = transcript.scrollHeight; }
+
+  function addMsg(role, text, quote) {
+    var el = document.createElement("div");
+    el.className = "chat-msg " + (role === "q" ? "q" : "a");
+    var body = role === "q" ? esc(text) : md(text);
+    if (role === "q" && quote) {
+      body += '<div class="chat-quote">' + esc(quote) + "</div>";
+    }
+    el.innerHTML = '<span class="chat-role">' + (role === "q" ? "You" : "Claude") + "</span>" + body;
+    transcript.appendChild(el);
+    scrollDown();
+    return el;
+  }
+  function addNotice(text) {
+    var el = document.createElement("div");
+    el.className = "chat-notice";
+    el.textContent = text;
+    transcript.appendChild(el);
+    scrollDown();
+    return el;
+  }
+
+  // --- Selection attachment ("Ask about this").
+  function renderAttach() {
+    if (attachEl) { attachEl.remove(); attachEl = null; }
+    if (!selectedHunk) return;
+    attachEl = document.createElement("div");
+    attachEl.id = "chat-attach";
+    attachEl.textContent = selectedHunk;
+    var x = document.createElement("span");
+    x.className = "clear-attach";
+    x.textContent = "✕";
+    x.addEventListener("click", function () { selectedHunk = null; renderAttach(); });
+    attachEl.appendChild(x);
+    panel.querySelector(".chat-input-row").insertAdjacentElement("beforebegin", attachEl);
+  }
+
+  document.addEventListener("mouseup", function (e) {
+    if (panel.contains(e.target) || e.target === askBtn) return;
+    setTimeout(function () {
+      var sel = window.getSelection();
+      var text = sel ? sel.toString().trim() : "";
+      if (!text || (sel.anchorNode && panel.contains(sel.anchorNode))) {
+        askBtn.style.display = "none";
+        return;
+      }
+      var rect = sel.getRangeAt(0).getBoundingClientRect();
+      askBtn.style.top = (window.scrollY + rect.bottom + 6) + "px";
+      askBtn.style.left = (window.scrollX + rect.left) + "px";
+      askBtn.style.display = "block";
+      askBtn._text = text;
+    }, 10);
+  });
+  askBtn.addEventListener("click", function () {
+    selectedHunk = askBtn._text || null;
+    renderAttach();
+    askBtn.style.display = "none";
+    setOpen(true);
+    input.focus();
+  });
+
+  // --- Ask a question.
+  function ask() {
+    var q = input.value.trim();
+    if (!q || busy) return;
+    busy = true;
+    send.disabled = true;
+    input.disabled = true;
+    addMsg("q", q, selectedHunk);
+    input.value = "";
+    var thinking = addNotice("Claude is reading the diff…");
+    thinking.className = "chat-notice chat-spinner";
+    // Keep answers brief by default; the reader can ask for more depth explicitly.
+    var BREVITY = "Keep your answer brief and to the point unless I ask for more detail.";
+    var payload = {
+      type: "diff-question",
+      // Shared secret with the local server, stamped in at generation time.
+      token: (window.EXPLAIN_ANCHOR || {}).token,
+      anchor: window.EXPLAIN_ANCHOR,
+      question: q + "\n\n(" + BREVITY + ")",
+      selectedHunk: selectedHunk || ""
+    };
+    var attach = selectedHunk;
+    selectedHunk = null;
+    renderAttach();
+    fetch(SERVER, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    }).then(function (r) { return r.json(); }).then(function (data) {
+      thinking.remove();
+      if (data && data.ok === false) {
+        addNotice(data.error || "the local server rejected the request");
+        return;
+      }
+      addMsg("a", (data && (data.answer || data.result || data.text)) || "(no answer returned)");
+      if (data && data.sessionId && window.EXPLAIN_ANCHOR) {
+        window.EXPLAIN_ANCHOR.sessionId = data.sessionId;
+      }
+    }).catch(function () {
+      thinking.remove();
+      selectedHunk = attach;
+      renderAttach();
+      addNotice("dashboard server offline (start it to enable chat)");
+    }).finally(function () {
+      busy = false;
+      send.disabled = false;
+      input.disabled = false;
+      input.focus();
+    });
+  }
+  send.addEventListener("click", ask);
+  input.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); ask(); }
+  });
+})();
+</script>
+</body>
+</html>
