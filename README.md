@@ -156,6 +156,19 @@ Pushes the current branch, creates a GitHub PR with a generated title and descri
 - When you say "ship it", "create a PR", "open a PR"
 - When you're ready to push and open a pull request
 
+#### PR Walkthrough (`/pr-walkthrough`)
+
+Generates a polished, self-contained HTML walkthrough of a GitHub PR: background and motivation first, then diff excerpts in logical reading order (not file order) with short descriptions, syntax highlighting, and collapsible sections.
+
+**Features:**
+- Orders excerpts for comprehension (API/data contract → entry points → core logic → tests → potential issues → summary)
+- Verifies flagged concerns against the actual code before including them, rather than hedging
+- Works against a PR number/URL or the current branch's diff vs main
+
+**When to use:**
+- When you say "/pr-walkthrough", "create a PR walkthrough", "walk me through this PR"
+- When you want a presentable HTML explanation of a pull request for a reviewer or teammate
+
 #### Review As (`/review-as <reviewer> <target>`)
 
 Reviews a PR or branch using a specific reviewer's documented technical preferences and code standards. Requires reviewer preference files in a `reviewers/` directory.

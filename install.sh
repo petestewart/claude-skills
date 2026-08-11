@@ -35,7 +35,7 @@ if [ ! -d "$SKILLS_DEST" ]; then
 fi
 
 # Skills to install
-SKILLS=("project-planner" "orchestrator" "subagent" "qa" "typora-markdown" "article" "article-add" "article-queue" "review-as" "problem-statement" "prd" "specs" "plan" "ralph-script" "explain-project" "ship" "test-review" "standup" "workato" "datadog-logs" "fitness-plan")
+SKILLS=("project-planner" "orchestrator" "subagent" "qa" "typora-markdown" "article" "article-add" "article-queue" "review-as" "problem-statement" "prd" "specs" "plan" "ralph-script" "explain-project" "ship" "test-review" "standup" "workato" "datadog-logs" "fitness-plan" "pr-walkthrough")
 
 # Install each skill
 for skill in "${SKILLS[@]}"; do
