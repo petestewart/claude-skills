@@ -67,6 +67,11 @@ When this command is invoked:
 **Jira Task(s) section**:
 - Always include the link to the Jira ticket using the format: `[TICKET-NUMBER](https://trunktools.atlassian.net/browse/TICKET-NUMBER)`
 
+**Ticket IDs (critical)**:
+- NEVER mention any ticket ID in the PR title or description other than the ticket this PR is directly for. Foreign keys (sibling tickets, epics, follow-ups) break the ticket automation
+- To reference related work, link the sibling PR by number or URL, or use plain words ("the epic's column-drop PR", "the merged Spec Sections PR (#5231)")
+- This applies to every PR create AND update; re-check the body for stray `IN-XXXX` / `TXT-XXXX` keys after any edit
+
 5. **Generate the PR title**:
    - The PR title MUST start with the Jira ticket number (e.g., `IN-814 Add per-resource-type Flipt flags`)
    - Format: `TICKET-NUMBER <Jira ticket summary>` — use the ticket's summary VERBATIM so the PR and ticket names match. Only deviate if the ticket summary is genuinely misleading about what the PR does, and flag the mismatch to the user instead of silently diverging
